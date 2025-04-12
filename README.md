@@ -195,7 +195,7 @@ When passing data to components or includes, object expressions are safely parse
 
 ## Written by AI
 
-This project was written by [relliv](https://github.com/relliv) with the help of [Windsurf](https://windsurf.com/editor) and [Claude 3.7 Sonnet](https://www.anthropic.com/news/claude-3-7-sonnet) model. All the codes and structure are not thought planned and are created experimentally with the sole purpose of creating a blade-like experience. Please be careful when using it.
+This project was written by [relliv](https://github.com/relliv) with the help of [Windsurf](https://windsurf.com/editor) and [Claude 3.7 Sonnet](https://www.anthropic.com/news/claude-3-7-sonnet) model. The entire codebase and architectural framework were not systematically planned, but rather experimentally developed with the sole purpose of creating an optimized performance experience. Please be careful when using it.
 
 ## License
 
