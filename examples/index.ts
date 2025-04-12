@@ -24,8 +24,8 @@ function loadTemplate(name: string): string {
     templatePath = join(currentDir, namespace, `${templateName}.blade.html`)
   }
   else {
-    // Default to templates directory
-    templatePath = join(currentDir, 'templates', `${name}.blade.html`)
+    // Default to pages directory
+    templatePath = join(currentDir, 'pages', `${name}.blade.html`)
   }
 
   return readFileSync(templatePath, 'utf-8')
@@ -86,7 +86,7 @@ try {
 
   // Method 2: Load all templates recursively from directory
   console.warn('\nMethod 2: Loading templates recursively from directory:')
-  loadTemplatesFromDirectory('templates', blade)
+  loadTemplatesFromDirectory('pages', blade)
   loadTemplatesFromDirectory('components', blade, 'components')
 
   // Create component classes
