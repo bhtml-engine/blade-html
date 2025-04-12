@@ -28,17 +28,19 @@ The examples demonstrate how to load templates recursively from subdirectories. 
 #### Directory Structure
 
 ```text
-pages/
+layouts/                    # Root-level layouts directory
 ├── layout.blade.html       # Main layout template
-├── page.blade.html         # Page template that extends layout
-└── partials/               # Subdirectory for partial templates
+└── partials/               # Partials used in layouts
     ├── header.blade.html   # Header partial template
     └── footer.blade.html   # Footer partial template
 
-components/
-├── alert.blade.html        # Alert component template
-├── card.blade.html         # Card component template
-└── user-profile.blade.html # User profile component template
+examples/
+├── pages/                  # Page templates
+│   └── page.blade.html     # Page template that extends layout
+└── components/             # Component templates
+    ├── alert.blade.html    # Alert component template
+    ├── card.blade.html     # Card component template
+    └── user-profile.blade.html # User profile component template
 ```
 
 #### Loading Templates Recursively
@@ -50,12 +52,13 @@ The example demonstrates two methods for loading templates:
 
 ```typescript
 // Method 1: Register templates individually
-blade.registerTemplate('layout', loadTemplate('layout'))
+blade.registerTemplate('layout', loadTemplate('layouts.layout'))
 blade.registerTemplate('alert', loadTemplate('components.alert'))
 
 // Method 2: Load all templates recursively from directory
 loadTemplatesFromDirectory('pages', blade)
 loadTemplatesFromDirectory('components', blade, 'components')
+loadTemplatesFromDirectory('layouts', blade, 'layouts')
 ```
 
 #### Using Templates from Subdirectories
@@ -63,13 +66,16 @@ loadTemplatesFromDirectory('components', blade, 'components')
 Templates in subdirectories are registered with dot notation:
 
 ```html
-<!-- Include a template from a subdirectory -->
-@include('partials.header', { title: 'My Title' })
+<!-- Include a layout partial -->
+@include('layouts.partials.header', { title: 'My Title' })
 
 <!-- Include a component template -->
 @component('components.alert', { type: 'warning' })
   <strong>Warning:</strong> This is a warning message.
 @endcomponent
+
+<!-- Extend a layout template -->
+@extends('layouts.layout')
 ```
 
 ### Safe Expression Evaluation

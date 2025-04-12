@@ -1,9 +1,9 @@
-@extends('layout')
+@extends('layouts.main-layout')
 
 @section('title', 'Blade HTML Examples')
 
 @section('header')
-  @include('partials.header', { title: title, subtitle: subtitle, author: author })
+  @include('layouts.partials.header', { title: title, subtitle: subtitle, author: author })
 @endsection
 
 @section('content')
@@ -55,5 +55,5 @@
 @endsection
 
 @section('footer')
-  @include('partials.footer', { companyName: companyName, links: links })
+  @include('layouts.partials.footer', { companyName: companyName, links: links })
 @endsection

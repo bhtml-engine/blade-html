@@ -18,14 +18,31 @@ function loadTemplate(name: string): string {
   let templatePath: string
 
   if (parts.length > 1) {
-    // If it's a namespaced path (e.g., 'components.alert')
+    // If it's a namespaced path (e.g., 'components.alert', 'layouts.partials.header')
     const namespace = parts[0]
     const templateName = parts.slice(1).join('.')
-    templatePath = join(currentDir, namespace, `${templateName}.blade.html`)
+
+    // Special case for layouts - look in examples/layouts directory
+    if (namespace === 'layouts') {
+      templatePath = join(currentDir, 'layouts', `${templateName}.blade.html`)
+    }
+    else {
+      templatePath = join(currentDir, namespace, `${templateName}.blade.html`)
+    }
   }
   else {
-    // Default to pages directory
-    templatePath = join(currentDir, 'pages', `${name}.blade.html`)
+    // Check if it's a layout file first
+    const layoutPath = join(currentDir, 'layouts', `${name}.blade.html`)
+
+    try {
+      // Try to access the file to see if it exists
+      statSync(layoutPath)
+      templatePath = layoutPath
+    }
+    catch {
+      // If not found in layouts, default to pages directory
+      templatePath = join(currentDir, 'pages', `${name}.blade.html`)
+    }
   }
 
   return readFileSync(templatePath, 'utf-8')
@@ -76,18 +93,57 @@ const blade = new BladeHtml()
 try {
   // Method 1: Register templates individually
   console.warn('Method 1: Registering individual templates:')
-  blade.registerTemplate('layout', loadTemplate('layout'))
-  blade.registerTemplate('page', loadTemplate('page'))
+  blade.registerTemplate('layouts.main-layout', loadTemplate('layouts.main-layout'))
+  blade.registerTemplate('pages.page', loadTemplate('pages.page'))
 
   // Register component templates with namespaced paths
-  blade.registerTemplate('alert', loadTemplate('components.alert'))
-  blade.registerTemplate('card', loadTemplate('components.card'))
-  blade.registerTemplate('user-profile', loadTemplate('components.user-profile'))
+  blade.registerTemplate('components.alert', loadTemplate('components.alert'))
+  blade.registerTemplate('components.card', loadTemplate('components.card'))
+  blade.registerTemplate('components.user-profile', loadTemplate('components.user-profile'))
 
   // Method 2: Load all templates recursively from directory
   console.warn('\nMethod 2: Loading templates recursively from directory:')
   loadTemplatesFromDirectory('pages', blade)
   loadTemplatesFromDirectory('components', blade, 'components')
+
+  // Load layouts from the examples directory
+  const examplesDir = new URL('.', import.meta.url).pathname
+  try {
+    const layoutsDir = join(examplesDir, 'layouts')
+    console.warn('\nLoading layouts from examples directory:')
+
+    // Function to recursively process layouts directory
+    function processLayoutsDirectory(dir: string, namePrefix: string = 'layouts'): void {
+      const items = readdirSync(dir)
+
+      for (const item of items) {
+        const itemPath = join(dir, item)
+        const stats = statSync(itemPath)
+
+        if (stats.isDirectory()) {
+          // If it's a directory, process it recursively with updated prefix
+          const newPrefix = `${namePrefix}.${item}`
+          processLayoutsDirectory(itemPath, newPrefix)
+        }
+        else if (stats.isFile() && item.endsWith('.blade.html')) {
+          // If it's a template file, register it
+          const templateName = item.slice(0, -'.blade.html'.length)
+          const fullTemplateName = `${namePrefix}.${templateName}`
+
+          // Read and register the template
+          const templateContent = readFileSync(itemPath, 'utf-8')
+          blade.registerTemplate(fullTemplateName, templateContent)
+          console.warn(`📄 Registered layout template: ${fullTemplateName}`)
+        }
+      }
+    }
+
+    // Start processing from the layouts directory
+    processLayoutsDirectory(layoutsDir)
+  }
+  catch (error) {
+    console.error('Error loading layouts:', error)
+  }
 
   // Create component classes
   class AlertComponent extends Component {
