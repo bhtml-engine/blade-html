@@ -1,145 +1,111 @@
+import { readFileSync } from 'node:fs'
+import { join } from 'node:path'
 import { BladeHtml, Component } from '../src/index'
+import { ExpressionEvaluator } from '../src/utils/ExpressionEvaluator'
+
+/**
+ * Example demonstrating the use of Blade HTML with safer expression evaluation using filtrex
+ * This example loads template files from the examples/templates directory and renders them
+ */
+
+// Helper function to load template files
+function loadTemplate(name: string): string {
+  // Use import.meta.url instead of __dirname (which is not available in ES modules)
+  const currentDir = new URL('.', import.meta.url).pathname
+  const templatePath = join(currentDir, 'templates', `${name}.blade.html`)
+
+  return readFileSync(templatePath, 'utf-8')
+}
 
 // Create a new BladeHtml instance
 const blade = new BladeHtml()
 
-// Define a layout template
-const layoutTemplate = `
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>@yield('title', 'Default Title')</title>
-  <style>
-    body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      line-height: 1.6;
-      color: #333;
-      max-width: 1200px;
-      margin: 0 auto;
-      padding: 20px;
+// Load and register all template files
+try {
+  // Register the layout template
+  blade.registerTemplate('layout', loadTemplate('layout'))
+
+  // Register component templates
+  blade.registerTemplate('alert', loadTemplate('alert'))
+  blade.registerTemplate('card', loadTemplate('card'))
+  blade.registerTemplate('user-profile', loadTemplate('user-profile'))
+
+  // Register the main page template
+  blade.registerTemplate('page', loadTemplate('page'))
+
+  // Create component classes
+  class AlertComponent extends Component {
+    render(): string {
+      const type = this.props.type || 'info'
+
+      return `<div class="alert alert-${type}">
+        ${this.slot('default', '')}
+      </div>`
     }
-    header {
-      background-color: #f4f4f4;
-      padding: 20px;
-      margin-bottom: 20px;
-      border-radius: 5px;
-    }
-    footer {
-      margin-top: 30px;
-      padding: 20px;
-      background-color: #f4f4f4;
-      text-align: center;
-      border-radius: 5px;
-    }
-    .container {
-      padding: 20px;
-    }
-    .card {
-      border: 1px solid #ddd;
-      border-radius: 5px;
-      padding: 15px;
-      margin-bottom: 15px;
-    }
-  </style>
-</head>
-<body>
-  <header>
-    <h1>@yield('header', 'Default Header')</h1>
-  </header>
-
-  <div class="container">
-    @yield('content')
-  </div>
-
-  <footer>
-    &copy; @date(new Date().getFullYear()) BladeHtml Example
-  </footer>
-</body>
-</html>
-`
-
-// Define a page template that extends the layout
-const pageTemplate = `
-@extends('layout')
-
-@section('title')
-  BladeHtml Example - Home Page
-@endsection
-
-@section('header')
-  Welcome to BladeHtml
-@endsection
-
-@section('content')
-  <div class="card">
-    <h2>About BladeHtml</h2>
-    <p>BladeHtml is a Blade-like template engine for TypeScript, inspired by Laravel's Blade templating system.</p>
-  </div>
-
-  <div class="card">
-    <h2>Features</h2>
-    <ul>
-      @foreach(features as feature)
-        <li>{{ feature }}</li>
-      @endforeach
-    </ul>
-  </div>
-
-  @if(showExtraContent)
-    <div class="card">
-      <h2>Extra Content</h2>
-      <p>This content is conditionally shown.</p>
-    </div>
-  @endif
-
-  @include('alert', { type: 'info', message: 'This is an example alert component.' })
-
-  <div class="card">
-    <h2>User Profile</h2>
-    @component('user-profile', { user })
-  </div>
-@endsection
-`
-
-// Define a simple alert component template
-const alertTemplate = `
-<div class="alert alert-{{ type }}" style="padding: 15px; margin-bottom: 20px; border: 1px solid #ddd; border-radius: 5px; background-color: {{ type === 'info' ? '#d1ecf1' : type === 'warning' ? '#fff3cd' : '#f8d7da' }};">
-  <strong>{{ type.charAt(0).toUpperCase() + type.slice(1) }}!</strong> {{ message }}
-</div>
-`
-
-// Define a user profile component class
-class UserProfileComponent extends Component {
-  render(): string {
-    // eslint-disable-next-line unused-imports/no-unused-vars
-    const user = this.props.user || {}
-
-    return `
-      <div class="user-profile">
-        <h3>{{ user.name }}</h3>
-        <p><strong>Email:</strong> {{ user.email }}</p>
-        <p><strong>Role:</strong> {{ user.role }}</p>
-        
-        @if(user.bio)
-          <div class="bio">
-            <h4>Bio</h4>
-            <p>{{ user.bio }}</p>
-          </div>
-        @endif
-        
-        ${this.slot('default', '<p>No additional information provided.</p>')}
-      </div>
-    `
   }
-}
 
-// Register templates and components
-blade.registerTemplate('layout', layoutTemplate)
-blade.registerTemplate('page', pageTemplate)
-blade.registerTemplate('alert', alertTemplate)
-blade.registerComponent('user-profile', UserProfileComponent)
+  class CardComponent extends Component {
+    render(): string {
+      const title = this.props.title || ''
+      const footer = this.props.footer || ''
+
+      return `<div class="card">
+        <div class="card-header">
+          <h3>${title}</h3>
+        </div>
+        <div class="card-body">
+          ${this.slot('default', '')}
+        </div>
+        ${footer ? `<div class="card-footer">${footer}</div>` : ''}
+      </div>`
+    }
+  }
+
+  class UserProfileComponent extends Component {
+    render(): string {
+      const user = this.props.user || {}
+
+      return `<div class="user-profile card">
+        <div class="user-header">
+          <h3>${user.name || 'Unknown User'}</h3>
+          ${user.verified ? '<span class="badge badge-success">Verified</span>' : ''}
+        </div>
+        <div class="user-body">
+          <p><strong>Email:</strong> ${user.email || 'N/A'}</p>
+          <p><strong>Role:</strong> ${user.role || 'User'}</p>
+          
+          ${user.bio
+            ? `<div class="bio">
+            <h4>Bio</h4>
+            <p>${user.bio}</p>
+          </div>`
+            : ''}
+          
+          ${user.stats
+            ? `<div class="stats">
+            <h4>Stats</h4>
+            <ul>
+              <li>Posts: ${user.stats.posts || 0}</li>
+              <li>Followers: ${user.stats.followers || 0}</li>
+              <li>Following: ${user.stats.following || 0}</li>
+            </ul>
+          </div>`
+            : ''}
+        </div>
+      </div>`
+    }
+  }
+
+  // Register component classes
+  blade.registerComponent('alert', AlertComponent)
+  blade.registerComponent('card', CardComponent)
+  blade.registerComponent('user-profile', UserProfileComponent)
+
+  console.warn('✅ All templates loaded successfully!')
+}
+catch (error) {
+  console.error('Error loading templates:', error)
+}
 
 // Define data for rendering
 const data = {
@@ -149,7 +115,8 @@ const data = {
     'Conditional rendering with @if/@else',
     'Loops with @foreach',
     'Custom directives',
-    'Variable interpolation',
+    'Variable interpolation with safe expression evaluation',
+    'Protection against code injection attacks',
   ],
   showExtraContent: true,
   user: {
@@ -157,14 +124,91 @@ const data = {
     email: 'john@example.com',
     role: 'Administrator',
     bio: 'John is a software developer with 5 years of experience in web development.',
+    verified: true,
+    stats: {
+      posts: 42,
+      followers: 1024,
+      following: 256,
+    },
   },
 }
+
+// Register custom directives using safer expression evaluation
+// This demonstrates how to create custom directives that use the ExpressionEvaluator
+
+// Register a custom directive for formatting dates
+blade.registerDirective('formatDate', (args: string, data: Record<string, any>) => {
+  try {
+    // For date formatting, we need to handle this specially since filtrex doesn't support methods
+    if (args.includes('new Date()')) {
+      return new Date().toLocaleDateString()
+    }
+    // If the argument is a string literal (wrapped in quotes), extract it
+    if ((args.startsWith('\'') && args.endsWith('\'')) || (args.startsWith('"') && args.endsWith('"'))) {
+      const dateStr = args.substring(1, args.length - 1)
+      return new Date(dateStr).toLocaleDateString()
+    }
+    // Otherwise try to evaluate as a timestamp or date string
+    const value = ExpressionEvaluator.evaluate(args, data)
+    const date = new Date(value)
+    return date.toLocaleDateString()
+  }
+  catch (error) {
+    console.error('Error formatting date:', error)
+    return 'Invalid Date'
+  }
+})
+
+// Register a custom directive for uppercase text
+blade.registerDirective('uppercase', (args: string, data: Record<string, any>) => {
+  try {
+    // Safely evaluate the expression using ExpressionEvaluator
+    const value = ExpressionEvaluator.evaluate(args, data)
+    return String(value).toUpperCase()
+  }
+  catch {
+    return ''
+  }
+})
+
+// Register a custom directive for the current year
+blade.registerDirective('year', () => {
+  return new Date().getFullYear().toString()
+})
+
+// Register a custom directive for concatenating strings
+blade.registerDirective('concat', (args: string, data: Record<string, any>) => {
+  try {
+    // Split the args by '+' and evaluate each part
+    const parts = args.split('+').map((part) => {
+      const trimmedPart = part.trim()
+      if (trimmedPart.startsWith('\'') && trimmedPart.endsWith('\'')) {
+        // It's a string literal
+        return trimmedPart.slice(1, -1)
+      }
+      else {
+        // Try to evaluate as an expression
+        try {
+          return ExpressionEvaluator.evaluate(trimmedPart, data)
+        }
+        catch {
+          return trimmedPart
+        }
+      }
+    })
+    return parts.join('')
+  }
+  catch {
+    return ''
+  }
+})
 
 // Render the page template with data
 const renderedHtml = blade.render('page', data)
 
 // Output the rendered HTML
-console.warn(renderedHtml)
+console.warn('🔄 Rendering page with safer expression evaluation...\n')
+console.warn(`⬇️ Output: \n\n${renderedHtml}\n`)
 
 // You could also write to a file
 // import { writeFileSync } from 'fs';

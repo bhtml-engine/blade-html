@@ -1,0 +1,30 @@
+<div class="user-profile card">
+  <div class="user-header">
+    <h3>{{ user.name }}</h3>
+    @if(user.verified)
+    <span class="badge badge-success">Verified</span>
+    @endif
+  </div>
+  <div class="user-body">
+    <p><strong>Email:</strong> {{ user.email }}</p>
+    <p><strong>Role:</strong> {{ user.role }}</p>
+    
+    @if(user.bio)
+    <div class="bio">
+      <h4>Bio</h4>
+      <p>{{ user.bio }}</p>
+    </div>
+    @endif
+    
+    @if(user.stats)
+    <div class="stats">
+      <h4>Stats</h4>
+      <ul>
+        <li>Posts: {{ user.stats.posts || 0 }}</li>
+        <li>Followers: {{ user.stats.followers || 0 }}</li>
+        <li>Following: {{ user.stats.following || 0 }}</li>
+      </ul>
+    </div>
+    @endif
+  </div>
+</div>
