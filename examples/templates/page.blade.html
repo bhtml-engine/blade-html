@@ -2,7 +2,9 @@
 
 @section('title', 'Blade HTML Examples')
 
-@section('header', 'Blade HTML Template Engine Examples')
+@section('header')
+  @include('partials.header', { title: title, subtitle: subtitle, author: author })
+@endsection
 
 @section('content')
   <h2>Welcome to Blade HTML</h2>
@@ -23,21 +25,21 @@
 
   <h3>Components Example</h3>
   <div class="components-demo">
-    @component('card', { title: 'Card Component', footer: 'Card footer with safe expressions' })
+    @component('components.card', { title: 'Card Component', footer: 'Card footer with safe expressions' })
       <p>This is a card component with safe expression evaluation.</p>
       <p>Current date: @formatDate('2025-04-12')</p>
     @endcomponent
 
-    @component('alert', { type: 'warning' })
+    @component('components.alert', { type: 'warning' })
       <strong>Warning:</strong> This is a warning message using the alert component.
     @endcomponent
 
-    @component('alert', { type: 'success' })
+    @component('components.alert', { type: 'success' })
       <strong>Success:</strong> Operation completed successfully!
     @endcomponent
 
     <h3>User Profile</h3>
-    @component('user-profile', { user: user })
+    @component('components.user-profile', { user: user })
     @endcomponent
   </div>
 
@@ -52,4 +54,6 @@
   @endif
 @endsection
 
-@section('footer', '&copy; @year() Blade HTML - Safe Template Engine with Filtrex')
+@section('footer')
+  @include('partials.footer', { companyName: companyName, links: links })
+@endsection

@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs'
+import { readdirSync, readFileSync, statSync } from 'node:fs'
 import { join } from 'node:path'
 import { BladeHtml, Component } from '../src/index'
 import { ExpressionEvaluator } from '../src/utils/ExpressionEvaluator'
@@ -8,13 +8,65 @@ import { ExpressionEvaluator } from '../src/utils/ExpressionEvaluator'
  * This example loads template files from the examples/templates directory and renders them
  */
 
-// Helper function to load template files
+// Helper function to load a single template file
 function loadTemplate(name: string): string {
   // Use import.meta.url instead of __dirname (which is not available in ES modules)
   const currentDir = new URL('.', import.meta.url).pathname
-  const templatePath = join(currentDir, 'templates', `${name}.blade.html`)
+
+  // Handle namespaced paths like 'components.alert'
+  const parts = name.split('.')
+  let templatePath: string
+
+  if (parts.length > 1) {
+    // If it's a namespaced path (e.g., 'components.alert')
+    const namespace = parts[0]
+    const templateName = parts.slice(1).join('.')
+    templatePath = join(currentDir, namespace, `${templateName}.blade.html`)
+  }
+  else {
+    // Default to templates directory
+    templatePath = join(currentDir, 'templates', `${name}.blade.html`)
+  }
 
   return readFileSync(templatePath, 'utf-8')
+}
+
+// Helper function to recursively load all templates from a directory
+function loadTemplatesFromDirectory(directory: string, blade: BladeHtml, namePrefix: string = ''): void {
+  const currentDir = new URL('.', import.meta.url).pathname
+  const templatesDir = join(currentDir, directory)
+  const templateExtension = '.blade.html'
+
+  // Function to recursively process directories
+  function processDirectory(dir: string, namePrefix: string = ''): void {
+    const items = readdirSync(dir)
+
+    for (const item of items) {
+      const itemPath = join(dir, item)
+      const stats = statSync(itemPath)
+
+      if (stats.isDirectory()) {
+        // If it's a directory, process it recursively with updated prefix
+        const newPrefix = namePrefix ? `${namePrefix}.${item}` : item
+        processDirectory(itemPath, newPrefix)
+      }
+      else if (stats.isFile() && item.endsWith(templateExtension)) {
+        // If it's a template file, register it
+        const templateName = item.slice(0, -templateExtension.length)
+        const fullTemplateName = namePrefix
+          ? `${namePrefix}.${templateName}`
+          : templateName
+
+        // Read and register the template
+        const templateContent = readFileSync(itemPath, 'utf-8')
+        blade.registerTemplate(fullTemplateName, templateContent)
+        console.warn(`📄 Registered template: ${fullTemplateName}`)
+      }
+    }
+  }
+
+  // Start processing from the root templates directory
+  processDirectory(templatesDir, namePrefix)
 }
 
 // Create a new BladeHtml instance
@@ -22,16 +74,20 @@ const blade = new BladeHtml()
 
 // Load and register all template files
 try {
-  // Register the layout template
+  // Method 1: Register templates individually
+  console.warn('Method 1: Registering individual templates:')
   blade.registerTemplate('layout', loadTemplate('layout'))
-
-  // Register component templates
-  blade.registerTemplate('alert', loadTemplate('alert'))
-  blade.registerTemplate('card', loadTemplate('card'))
-  blade.registerTemplate('user-profile', loadTemplate('user-profile'))
-
-  // Register the main page template
   blade.registerTemplate('page', loadTemplate('page'))
+
+  // Register component templates with namespaced paths
+  blade.registerTemplate('alert', loadTemplate('components.alert'))
+  blade.registerTemplate('card', loadTemplate('components.card'))
+  blade.registerTemplate('user-profile', loadTemplate('components.user-profile'))
+
+  // Method 2: Load all templates recursively from directory
+  console.warn('\nMethod 2: Loading templates recursively from directory:')
+  loadTemplatesFromDirectory('templates', blade)
+  loadTemplatesFromDirectory('components', blade, 'components')
 
   // Create component classes
   class AlertComponent extends Component {
@@ -96,7 +152,12 @@ try {
     }
   }
 
-  // Register component classes
+  // Register component classes with both namespaced and non-namespaced names
+  blade.registerComponent('components.alert', AlertComponent)
+  blade.registerComponent('components.card', CardComponent)
+  blade.registerComponent('components.user-profile', UserProfileComponent)
+
+  // Also register with original names for backward compatibility
   blade.registerComponent('alert', AlertComponent)
   blade.registerComponent('card', CardComponent)
   blade.registerComponent('user-profile', UserProfileComponent)
@@ -117,6 +178,7 @@ const data = {
     'Custom directives',
     'Variable interpolation with safe expression evaluation',
     'Protection against code injection attacks',
+    'Recursive template loading from subdirectories',
   ],
   showExtraContent: true,
   user: {
@@ -131,6 +193,15 @@ const data = {
       following: 256,
     },
   },
+  title: 'Blade HTML Example',
+  subtitle: 'Safer Template Engine with Filtrex',
+  author: 'Blade HTML Team',
+  companyName: 'Blade HTML',
+  links: [
+    { url: '#', text: 'Home' },
+    { url: '#', text: 'About' },
+    { url: '#', text: 'Contact' },
+  ],
 }
 
 // Register custom directives using safer expression evaluation
