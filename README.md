@@ -8,6 +8,9 @@
 
 A Blade-like template engine for TypeScript, inspired by Laravel's Blade templating system.
 
+> [!CAUTION]
+> This is a work in progress and may have bugs. Use at your own risk.
+
 ## Features
 
 - **Template Inheritance**: Extend layouts with `@extends` and define sections with `@section`/`@endsection`
