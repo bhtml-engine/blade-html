@@ -55,6 +55,9 @@ catalogs:
       specifier: ^22.13.10
       version: 22.13.10
   utils:
+    filtrex:
+      specifier: ^3.1.0
+      version: 3.1.0
     tinyexec:
       specifier: ^0.3.2
       version: 0.3.2
@@ -81,6 +84,9 @@ importers:
       eslint:
         specifier: catalog:cli
         version: 9.22.0(jiti@2.4.2)
+      filtrex:
+        specifier: catalog:utils
+        version: 3.1.0
       lint-staged:
         specifier: catalog:cli
         version: 15.5.0
@@ -1497,6 +1503,9 @@ packages:
   fill-range@7.1.1:
     resolution: {integrity: sha512-YsGpe3WHLK8ZYi4tWDg2Jy3ebRz2rXowDxnld4bkQB00cc/1Zw9AWnC0i9ztDJitivtQvaI9KaLyKrc+hBW0yg==}
     engines: {node: '>=8'}
+
+  filtrex@3.1.0:
+    resolution: {integrity: sha512-mHzZ2wUISETF1OaEcNRiGz1ljuIV8c/C9td9qyAZ+wTwigkAk5RO9YrCxQKk5H9v7joDRFIBik9U5RTK9eXZ/A==}
 
   find-up-simple@1.0.1:
     resolution: {integrity: sha512-afd4O7zpqHeRyg4PfDQsXmlDe2PfdHtJt6Akt8jOWaApLOZk5JXs6VMR29lz03pRe9mpykrRCYIYxaJYcfpncQ==}
@@ -4101,6 +4110,8 @@ snapshots:
   fill-range@7.1.1:
     dependencies:
       to-regex-range: 5.0.1
+
+  filtrex@3.1.0: {}
 
   find-up-simple@1.0.1: {}
 

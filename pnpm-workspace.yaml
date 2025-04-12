@@ -24,6 +24,7 @@ catalogs:
   types:
     '@types/node': ^22.13.10
   utils:
+    filtrex: ^3.1.0
     tinyexec: ^0.3.2
 onlyBuiltDependencies:
   - esbuild
