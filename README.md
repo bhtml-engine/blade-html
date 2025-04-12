@@ -24,11 +24,11 @@ A Blade-like template engine for TypeScript, inspired by Laravel's Blade templat
 ## Installation
 
 ```bash
+pnpm add blade-html
+# or
 npm install blade-html
 # or
 yarn add blade-html
-# or
-pnpm add blade-html
 ```
 
 ## Quick Start
