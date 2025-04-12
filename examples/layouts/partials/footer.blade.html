@@ -1,12 +1,11 @@
 <div class="page-footer">
   <div class="footer-content">
-    <div class="copyright">&copy; @year() {{ companyName || 'Company Name' }}</div>
-    @if(links != null)
+    <div class="copyright">&copy; @year() {{ companyName }}</div>
     <div class="links">
-      @foreach(links as link)
-        <a href="{{ link.url || '#' }}">{{ link.text || 'Link' }}</a>
-      @endforeach
+      <a href="#">Home</a>
+      <a href="#">About</a>
+      <a href="#">Contact</a>
+      <a href="#">Montact</a>
     </div>
-    @endif
   </div>
 </div>

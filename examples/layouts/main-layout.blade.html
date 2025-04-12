@@ -63,17 +63,18 @@
     }
   </style>
 </head>
+
 <body>
   <header>
-    <h1>@yield('header', 'Blade HTML Template Engine')</h1>
+    @include('layouts.partials.header', { title: title, subtitle: subtitle, author: author })
   </header>
 
-  <div class="container">
+  <main class="container">
     @yield('content')
-  </div>
+  </main>
 
   <footer>
-    <p>@yield('footer', '&copy; @year() Blade HTML - Safe Template Engine')</p>
+    @include('layouts.partials.footer', { companyName: companyName, links: links })
   </footer>
 </body>
 </html>

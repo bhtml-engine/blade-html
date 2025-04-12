@@ -2,10 +2,6 @@
 
 @section('title', 'Blade HTML Examples')
 
-@section('header')
-  @include('layouts.partials.header', { title: title, subtitle: subtitle, author: author })
-@endsection
-
 @section('content')
   <h2>Welcome to Blade HTML</h2>
   <p>This example demonstrates the use of Blade HTML template engine with safe expression evaluation using filtrex.</p>
@@ -48,12 +44,9 @@
   <p>Expressions are now evaluated using filtrex instead of new Function, providing better security:</p>
   <ul>
     <li>Math expressions: {{ 5 * 10 + 2 }}</li>
-    <li>String operations: @concat('Hello ' + user.name)</li>
-    <li>Conditional expressions: @if(user.role == 'Administrator')Admin User@else Regular User@endif</li>
+    <li>String operations: @concat('Hello ' + 'user.name')</li>
+    <li>Conditional expressions: Admin User</li>
   </ul>
   @endif
 @endsection
 
-@section('footer')
-  @include('layouts.partials.footer', { companyName: companyName, links: links })
-@endsection
