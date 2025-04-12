@@ -6,7 +6,7 @@
 [![JSDocs][jsdocs-src]][jsdocs-href]
 [![License][license-src]][license-href]
 
-A Blade-like template engine for TypeScript, inspired by Laravel's Blade templating system.
+A Blade-like template engine for TypeScript, inspired by [Laravel](https://laravel.com/)'s [Blade](https://laravel.com/docs/12.x/blade) template engine.
 
 > [!CAUTION]
 > This is a work in progress and may have bugs. Use at your own risk.
@@ -192,6 +192,10 @@ All output from `{{ }}` expressions is automatically HTML-escaped to prevent XSS
 ### Object Expression Handling
 
 When passing data to components or includes, object expressions are safely parsed and evaluated without using `eval` or `new Function`.
+
+## Written by AI
+
+This project was written by [relliv](https://github.com/relliv) with the help of [Windsurf](https://windsurf.com/editor) and [Claude 3.7 Sonnet](https://www.anthropic.com/news/claude-3-7-sonnet) model. All the codes and structure are not thought planned and are created experimentally with the sole purpose of creating a blade-like experience. Please be careful when using it.
 
 ## License
 
