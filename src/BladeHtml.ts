@@ -188,13 +188,14 @@ export class BladeHtml {
                 if (slotName === 'default') {
                   // Replace the default slot (content between @component and @endcomponent)
                   // If there's no explicit {{ slot }} placeholder, append the content to the template
-                  if (content.includes('{{ slot }}') || content.includes('{{slot}}')) {
-                    content = content.replace(/\{\{\s*slot\s*\}\}/g, slotContent)
+                  const slotOrContentMatch = content.match(/\{\{\s*(slot|content)\s*\}\}/)
+                  if (slotOrContentMatch) {
+                    // Replace only the first occurrence of either {{ slot }} or {{ content }}
+                    content = content.replace(/\{\{\s*(slot|content)\s*\}\}/, slotContent)
                   }
-                  else {
-                    // If no slot placeholder, just append the content at the end
-                    content += slotContent
-                  }
+                  // else {
+                  //   content += slotContent
+                  // }
                 }
                 else {
                   // Replace named slots
@@ -383,13 +384,15 @@ export class BladeHtml {
               for (const [slotName, slotContent] of this.slots.entries()) {
                 if (slotName === 'default') {
                   // If there's no explicit {{ slot }} placeholder, append the content to the template
-                  if (content.includes('{{ slot }}') || content.includes('{{slot}}')) {
-                    content = content.replace(/\{\{\s*slot\s*\}\}/g, slotContent)
+                  const slotOrContentMatch = content.match(/\{\{\s*(slot|content)\s*\}\}/)
+                  if (slotOrContentMatch) {
+                    // Replace only the first occurrence of either {{ slot }} or {{ content }}
+                    content = content.replace(/\{\{\s*(slot|content)\s*\}\}/, slotContent)
+                    // Do NOT append slotContent at the end if a placeholder was present
                   }
-                  else {
-                    // If no slot placeholder, just append the content at the end
-                    content += slotContent
-                  }
+                  // else {
+                  //   content += slotContent
+                  // }
                 }
                 else {
                   // Replace named slots
