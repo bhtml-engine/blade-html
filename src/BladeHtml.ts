@@ -618,13 +618,14 @@ export class BladeHtml {
    * Register common directives
    */
   private registerCommonDirectives(): void {
-    this.registerDirective('json', CommonDirectives.json)
-    this.registerDirective('raw', CommonDirectives.raw)
-    this.registerDirective('date', CommonDirectives.date)
-    this.registerDirective('class', CommonDirectives.class)
-    this.registerDirective('style', CommonDirectives.style)
-    this.registerDirective('dump', CommonDirectives.dump)
-    this.registerDirective('concat', CommonDirectives.concat)
+    this.directiveRegistry.register('json', CommonDirectives.json)
+    this.directiveRegistry.register('raw', CommonDirectives.raw)
+    this.directiveRegistry.register('date', CommonDirectives.date)
+    this.directiveRegistry.register('class', CommonDirectives.class)
+    this.directiveRegistry.register('style', CommonDirectives.style)
+    this.directiveRegistry.register('dump', CommonDirectives.dump)
+    this.directiveRegistry.register('concat', CommonDirectives.concat)
+    this.directiveRegistry.register('formatDate', CommonDirectives.formatDate)
   }
 
   /**
