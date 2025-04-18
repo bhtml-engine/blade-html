@@ -116,16 +116,8 @@ export class BladeHtml {
    */
   public registerTemplate(name: string, content: string): this {
     // Support registering with alias (theme1::pages.home)
-    const aliasInfo = this.resolveAlias(name)
-    if (aliasInfo) {
-      // Optionally: store in a per-alias engine or map for true isolation
-      // For now, just flatten: alias::name => alias.name
-      const flatName = `${aliasInfo.dir}::${aliasInfo.name}`
-      this.engine.registerTemplate(flatName, content)
-    }
-    else {
-      this.engine.registerTemplate(name, content)
-    }
+    // Always register with the name as provided, do not flatten to dir::name
+    this.engine.registerTemplate(name, content)
     return this
   }
 
@@ -613,29 +605,51 @@ export class BladeHtml {
    * @param autoLoadDependencies Whether to automatically load dependencies (default: true)
    */
   public render(nameOrContent: string, data: Record<string, any> = {}, autoLoadDependencies: boolean = true): string {
-    // Alias support: resolve and flatten
+    // Alias error handling: if '::' is present, ensure alias is registered
+    if (nameOrContent.includes('::')) {
+      const alias = nameOrContent.split('::')[0]
+      if (!this.aliases.has(alias)) {
+        throw new Error(`Alias '${alias}' is not registered`)
+      }
+    }
+    // Inline template detection
     let isInlineTemplate = false
     let templateName = nameOrContent
-    const aliasInfo = this.resolveAlias(nameOrContent)
-    if (aliasInfo) {
-      templateName = `${aliasInfo.dir}::${aliasInfo.name}`
+
+    // Check if the template is already registered (including alias resolution)
+    let isRegistered = false
+    try {
+      this.engine.getTemplateContent(templateName)
+      isRegistered = true
     }
-    // If it contains template directives or HTML tags, it's likely an inline template
-    if (
+    catch {
+      // Not registered, proceed to inline detection
+    }
+
+    if (!isRegistered && (
       nameOrContent.includes('@')
       || nameOrContent.includes('{{')
       || nameOrContent.includes('<')
       || !nameOrContent.match(/^[\w.]+$/)
-    ) {
+    )) {
       isInlineTemplate = true
       templateName = `inline_template_${Date.now()}`
       this.registerTemplate(templateName, nameOrContent)
     }
+    // Dependency loading
     if (autoLoadDependencies) {
       const defaultNamespaces = ['pages', 'layouts', 'components']
       this.loadTemplatesAndRegisterComponents(defaultNamespaces, templateName)
     }
     this.engine.setData(data)
+    // Try rendering the template as registered (including alias form)
+    // Ensure we only render if the template exists (without accessing private property)
+    try {
+      this.engine.getTemplateContent(templateName)
+    }
+    catch {
+      throw new Error(`Template '${templateName}' not found`)
+    }
     let content = this.engine.render(templateName)
     if (isInlineTemplate) {
       this.engine.unregisterTemplate(templateName)

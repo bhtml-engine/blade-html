@@ -96,17 +96,23 @@ export class Engine {
 
     if (extendsMatch) {
       const parentName = extendsMatch[1]
+      // Always look up parent template by exact name (including alias form)
       const parentTemplate = this.templates.get(parentName)
 
       if (!parentTemplate) {
         throw new Error(`Parent template "${parentName}" not found`)
       }
 
-      // Process sections in the child template
+      // Process sections in the child template (registers them in this.sections)
       this.processSections(content)
 
-      // Return the parent template (sections will be filled in later)
-      return parentTemplate
+      // Recursively process parent template (in case it also extends another template)
+      let processedParent = this.processExtends(parentTemplate)
+
+      // Fill in @yield in parent with child's sections
+      processedParent = this.processYields(processedParent)
+
+      return processedParent
     }
 
     // If no extends, just process sections and return

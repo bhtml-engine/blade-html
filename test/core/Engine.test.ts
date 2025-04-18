@@ -84,7 +84,7 @@ describe('engine', () => {
 
       const result = engine.render('page')
       // The Engine doesn't process nested template inheritance in a single pass
-      expect(result).toBe('@extends("base")@section("content")<div>Inner content</div>@endsection')
+      expect(result).toBe('<html><body><div>Inner content</div></body></html>')
     })
   })
 

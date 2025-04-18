@@ -28,7 +28,7 @@ describe('bladehtml', () => {
     })
 
     it('should throw an error when rendering a non-existent template', () => {
-      expect(() => blade.render('nonexistent')).toThrow('Template "nonexistent" not found')
+      expect(() => blade.render('nonexistent')).toThrow('Template \'nonexistent\' not found')
     })
   })
 
@@ -51,6 +51,48 @@ describe('bladehtml', () => {
 
       expect(result1).toBe('<html><body>Custom content</body></html>')
       expect(result2).toBe('<html><body>Default content</body></html>')
+    })
+  })
+
+  describe('alias support', () => {
+    it('should register and resolve an alias', () => {
+      const blade = new BladeHtml()
+      blade.registerAlias('theme1', '/some/path')
+      // @ts-expect-error: access private for test
+      expect(blade.aliases.get('theme1')).toBe('/some/path')
+    })
+
+    it('should register and render a template using an alias', () => {
+      const blade = new BladeHtml()
+      blade.registerAlias('theme1', '/theme1')
+      blade.registerTemplate('theme1::welcome', 'Hello from {{ theme }}!')
+      const result = blade.render('theme1::welcome', { theme: 'Theme 1' })
+      expect(result).toBe('Hello from Theme 1!')
+    })
+
+    it('should fall back or error if alias is not registered', () => {
+      const blade = new BladeHtml()
+      // No alias registered
+      expect(() => blade.render('theme2::welcome')).toThrow()
+    })
+
+    it('should support registering multiple aliases and rendering', () => {
+      const blade = new BladeHtml()
+      blade.registerAlias('theme1', '/theme1')
+      blade.registerAlias('theme2', '/theme2')
+      blade.registerTemplate('theme1::welcome', 'Theme1')
+      blade.registerTemplate('theme2::welcome', 'Theme2')
+      expect(blade.render('theme1::welcome')).toBe('Theme1')
+      expect(blade.render('theme2::welcome')).toBe('Theme2')
+    })
+
+    it('should resolve alias in template dependencies', () => {
+      const blade = new BladeHtml()
+      blade.registerAlias('theme1', '/theme1')
+      blade.registerTemplate('theme1::layout', '<body>@yield("content")</body>')
+      blade.registerTemplate('theme1::page', '@extends("theme1::layout")@section("content")Content@endsection')
+      const result = blade.render('theme1::page')
+      expect(result).toBe('<body>Content</body>')
     })
   })
 
