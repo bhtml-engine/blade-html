@@ -1,3 +1,4 @@
+import { existsSync, mkdirSync, writeFileSync } from 'node:fs'
 import { BladeHtml } from '../src/index'
 import { ExpressionEvaluator } from '../src/utils/ExpressionEvaluator'
 
@@ -131,5 +132,9 @@ console.warn('🔄 Rendering page with safer expression evaluation...\n')
 console.warn(`⬇️ Output: \n\n${renderedHtml}\n`)
 
 // You could also write to a file
-// import { writeFileSync } from 'fs';
-// writeFileSync('output.html', renderedHtml);
+
+if (!existsSync('dist')) {
+  mkdirSync('dist')
+}
+
+writeFileSync('dist/output.html', renderedHtml)
