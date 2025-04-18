@@ -474,20 +474,43 @@ export class BladeHtml {
 
   /**
    * Render a template with data
-   * @param name Template name
+   * @param nameOrContent Template name or inline template content
    * @param data Data for template rendering
    * @param autoLoadDependencies Whether to automatically load dependencies (default: true)
    */
-  public render(name: string, data: Record<string, any> = {}, autoLoadDependencies: boolean = true): string {
+  public render(nameOrContent: string, data: Record<string, any> = {}, autoLoadDependencies: boolean = true): string {
+    // Check if nameOrContent is a template name or inline content
+    let isInlineTemplate = false
+    let templateName = nameOrContent
+
+    // If it contains template directives or HTML tags, it's likely an inline template
+    if (
+      nameOrContent.includes('@')
+      || nameOrContent.includes('{{')
+      || nameOrContent.includes('<')
+      || !nameOrContent.match(/^[\w.]+$/)
+    ) {
+      isInlineTemplate = true
+      // Generate a unique name for the inline template
+      templateName = `inline_template_${Date.now()}`
+      // Register the inline content as a template
+      this.registerTemplate(templateName, nameOrContent)
+    }
+
     // If autoLoadDependencies is true, load templates and register components
     if (autoLoadDependencies) {
       // Default namespaces to load templates from
       const defaultNamespaces = ['pages', 'layouts', 'components']
-      this.loadTemplatesAndRegisterComponents(defaultNamespaces, name)
+      this.loadTemplatesAndRegisterComponents(defaultNamespaces, templateName)
     }
 
     this.engine.setData(data)
-    let content = this.engine.render(name)
+    let content = this.engine.render(templateName)
+
+    // If it was an inline template, unregister it to avoid cluttering the template registry
+    if (isInlineTemplate) {
+      this.engine.unregisterTemplate(templateName)
+    }
 
     // Process component directives with dynamic component loading
     content = ComponentProcessor.process(

@@ -10,6 +10,11 @@ describe('bladehtml', () => {
   })
 
   describe('template registration and rendering', () => {
+    it('should render inline template strings', () => {
+      const result = blade.render('<div>{{ greeting }}</div>', { greeting: 'Hello, world!' })
+      expect(result).toBe('<div>Hello, world!</div>')
+    })
+
     it('should register and render a simple template', () => {
       blade.registerTemplate('test', 'Hello, {{ name }}!')
       const result = blade.render('test', { name: 'World' })

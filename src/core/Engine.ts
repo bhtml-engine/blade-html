@@ -30,6 +30,15 @@ export class Engine {
   }
 
   /**
+   * Unregister a template by name
+   * @param name Template name to remove
+   * @returns true if the template was found and removed, false otherwise
+   */
+  public unregisterTemplate(name: string): boolean {
+    return this.templates.delete(name)
+  }
+
+  /**
    * Set data for template rendering
    * @param data Data object to use for variable interpolation
    */

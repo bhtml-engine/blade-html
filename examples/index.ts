@@ -120,6 +120,12 @@ blade.registerDirective('concat', (args: string, data: Record<string, any>) => {
   }
 })
 
+if (!existsSync('dist')) {
+  mkdirSync('dist')
+}
+
+// #region Template Path Rendering
+
 // Define the initial template to render
 const initialTemplate = 'pages.home'
 
@@ -133,8 +139,49 @@ console.warn(`⬇️ Output: \n\n${renderedHtml}\n`)
 
 // You could also write to a file
 
-if (!existsSync('dist')) {
-  mkdirSync('dist')
-}
+writeFileSync('dist/template-path-output.html', renderedHtml)
 
-writeFileSync('dist/output.html', renderedHtml)
+// #endregion
+
+// #region Inline Template Rendering
+
+// Example of inline template rendering
+console.warn('\n🔄 Rendering inline template example...\n')
+
+// Create an inline template with various Blade features
+const inlineTemplate = `
+<div class="inline-example">
+  <h1>{{ title }}</h1>
+  
+  @if(showGreeting)
+    <p>Hello, {{ name }}!</p>
+  @else
+    <p>Welcome, guest!</p>
+  @endif
+  
+  <ul>
+    @foreach(items as item)
+      <li>{{ item }}</li>
+    @endforeach
+  </ul>
+  
+  @component("alert")
+    This is an alert message!
+  @endcomponent
+</div>
+`
+
+// Render the inline template with data
+const inlineRenderedHtml = blade.render(inlineTemplate, {
+  title: 'Inline Template Demo',
+  name: 'User',
+  showGreeting: true,
+  items: ['Apple', 'Banana', 'Cherry'],
+})
+
+// Output the rendered inline HTML
+console.warn(`⬇️ Inline Template Output: \n\n${inlineRenderedHtml}\n`)
+
+writeFileSync('dist/inline-template-output.html', inlineRenderedHtml)
+
+// #endregion
