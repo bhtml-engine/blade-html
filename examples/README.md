@@ -7,7 +7,7 @@ This directory contains examples demonstrating how to use the Blade HTML templat
 To run the examples, use the following command from the project root:
 
 ```bash
-pnpm dlx tsx ./examples/index.ts
+pnpm dlx tsx ./examples/theme-1.ts
 ```
 
 This will generate the rendered HTML in the console and also save it to `dist/output.html`.

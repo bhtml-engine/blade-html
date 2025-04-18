@@ -19,12 +19,13 @@ export class BladeHtml {
   private directiveRegistry: DirectiveRegistry
   private templateDirs: string[] = []
   private componentDirs: string[] = []
+  private rootDir!: string
 
   /**
    * Constructor for BladeHtml
    * @param rootDir Optional root directory for templates and components
    */
-  constructor(rootDir?: string) {
+  constructor(rootDir: string = dirname(fileURLToPath(import.meta.url))) {
     this.engine = new Engine()
     this.compiler = new TemplateCompiler()
     this.componentRegistry = new ComponentRegistry()
@@ -35,28 +36,25 @@ export class BladeHtml {
 
     // If rootDir is provided, set it as the base directory for templates and components
     if (rootDir) {
+      this.rootDir = rootDir
       if (existsSync(rootDir)) {
-        // Check for templates and components subdirectories
-        const templatesDir = join(rootDir, 'templates')
-        const componentsDir = join(rootDir, 'components')
-
+        // Only use subdirectories under rootDir for templates/components
         const templateDirs: string[] = []
         const componentDirs: string[] = []
 
-        // Add the root directory itself
-        templateDirs.push(rootDir)
+        const pagesDir = join(rootDir, 'pages')
+        const layoutsDir = join(rootDir, 'layouts')
+        const componentsDir = join(rootDir, 'components')
 
-        // Check if templates directory exists
-        if (existsSync(templatesDir) && statSync(templatesDir).isDirectory()) {
-          templateDirs.push(templatesDir)
+        if (existsSync(pagesDir) && statSync(pagesDir).isDirectory()) {
+          templateDirs.push(pagesDir)
         }
-
-        // Check if components directory exists
+        if (existsSync(layoutsDir) && statSync(layoutsDir).isDirectory()) {
+          templateDirs.push(layoutsDir)
+        }
         if (existsSync(componentsDir) && statSync(componentsDir).isDirectory()) {
           componentDirs.push(componentsDir)
         }
-
-        // Set the template and component directories
         this.setTemplateDirs(templateDirs)
         this.setComponentDirs(componentDirs)
       }
@@ -459,8 +457,7 @@ export class BladeHtml {
 
     try {
       // Get the current directory - use import.meta.url in ESM context
-      const currentDir = dirname(fileURLToPath(import.meta.url))
-      const namespaceDir = join(currentDir, '..', 'examples', namespace)
+      const namespaceDir = join(this.rootDir, namespace)
       const templateExtension = '.blade.html'
 
       // Function to recursively process directories

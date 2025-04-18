@@ -53,9 +53,11 @@ export class Engine {
    */
   public getTemplateContent(name: string): string {
     const template = this.templates.get(name)
+
     if (!template) {
       throw new Error(`Template "${name}" not found`)
     }
+
     return template
   }
 
