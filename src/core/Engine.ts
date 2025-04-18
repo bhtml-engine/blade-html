@@ -174,6 +174,154 @@ export class Engine {
       }
     })
 
+    // Process @for loop directive
+    result = result.replace(/@for\s*\(\s*(.*?)\s*;\s*(.*?)\s*;\s*(.*?)\s*\)([\s\S]*?)@endfor/g, (_, initExpr, conditionExpr, incrementExpr, content) => {
+      try {
+        // We need to use a safer approach for for-loops that doesn't rely on eval or with statements
+        // Extract the loop variable name and initial value
+        const initMatch = initExpr.match(/\s*(var|let|const)?\s*(\w+)\s*=\s*([^;]+)/)
+        if (!initMatch) {
+          console.error(`Invalid for loop initialization: ${initExpr}`)
+          return ''
+        }
+
+        const loopVarName = initMatch[2]
+        let loopVarValue: number
+
+        try {
+          // Try to parse the initial value as a number
+          loopVarValue = Number(initMatch[3])
+        }
+        catch {
+          // Default to 0 if parsing fails
+          loopVarValue = 0
+        }
+
+        // Parse the condition to extract the limit
+        const conditionMatch = conditionExpr.match(/(\w+)\s*<\s*([^;]+)/)
+        if (!conditionMatch) {
+          console.error(`Invalid for loop condition: ${conditionExpr}`)
+          return ''
+        }
+
+        // Get the limit value
+        let limitValue: number
+        const limitExpr = conditionMatch[2].trim()
+
+        if (limitExpr.match(/^\d+$/)) {
+          // It's a simple number
+          limitValue = Number(limitExpr)
+        }
+        else if (limitExpr.includes('.length')) {
+          // It's an array length expression
+          const arrayName = limitExpr.split('.')[0]
+          const array = this.data[arrayName]
+          if (Array.isArray(array)) {
+            limitValue = array.length
+          }
+          else {
+            console.error(`Invalid array in for loop condition: ${arrayName}`)
+            return ''
+          }
+        }
+        else {
+          // Try to evaluate the limit from the data context
+          try {
+            limitValue = Number(this.data[limitExpr]) || 5 // Default to 5 if not a valid number
+          }
+          catch {
+            limitValue = 5 // Default limit
+          }
+        }
+
+        // Parse the increment expression
+        const incrementMatch = incrementExpr.match(/(\w+)\s*=\s*(\w+)\s*\+\s*(\d+)/)
+        const incrementValue = incrementMatch ? Number(incrementMatch[3]) : 1
+
+        // Build the result by iterating manually
+        let loopContent = ''
+
+        for (let i = loopVarValue; i < limitValue; i += incrementValue) {
+          // Create a context for this iteration
+          const iterationContext = { ...this.data, [loopVarName]: i }
+
+          // Process the content with the current loop variables
+          let iterationContent = content
+
+          // Replace {{ expressions }} with their values
+          iterationContent = iterationContent.replace(/\{\{\s*(.*?)\s*\}\}/g, (_: string, expr: string) => {
+            try {
+              // Handle common expressions
+              if (expr.trim() === loopVarName) {
+                return String(i)
+              }
+              else if (expr.includes('+') && expr.includes(loopVarName)) {
+                // Handle i + 1 type expressions
+                const addMatch = expr.match(/(\w+)\s*\+\s*(\d+)/)
+                if (addMatch && addMatch[1] === loopVarName) {
+                  return String(i + Number(addMatch[2]))
+                }
+              }
+              else if (expr.includes('%') && expr.includes(loopVarName)) {
+                // Handle i % 2 type expressions
+                const modMatch = expr.match(/(\w+)\s*%\s*(\d+)\s*===\s*(\d+)/)
+                if (modMatch && modMatch[1] === loopVarName) {
+                  const mod = i % Number(modMatch[2])
+                  return String(mod === Number(modMatch[3]))
+                }
+                // Handle i % 2 === 0 ? 'even' : 'odd' type expressions
+                const ternaryMatch = expr.match(/(\w+)\s*%\s*(\d+)\s*===\s*(\d+)\s*\?\s*['"](.*?)['"]\s*:\s*['"](.*?)['"]/)
+                if (ternaryMatch && ternaryMatch[1] === loopVarName) {
+                  const mod = i % Number(ternaryMatch[2])
+                  return mod === Number(ternaryMatch[3]) ? ternaryMatch[4] : ternaryMatch[5]
+                }
+              }
+              else if (expr.includes('[') && expr.includes(']')) {
+                // Handle array access like users[i].name
+                const arrayAccessMatch = expr.match(/(\w+)\[(\w+)\]\.(\w+)/)
+                if (arrayAccessMatch && arrayAccessMatch[2] === loopVarName) {
+                  const arrayName = arrayAccessMatch[1]
+                  const propertyName = arrayAccessMatch[3]
+                  const array = this.data[arrayName]
+                  if (Array.isArray(array) && i < array.length) {
+                    const item = array[i]
+                    return String(item[propertyName] || '')
+                  }
+                }
+                // Handle array access with ternary like users[i].isActive ? 'Active' : 'Inactive'
+                const arrayTernaryMatch = expr.match(/(\w+)\[(\w+)\]\.(\w+)\s*\?\s*['"](.*?)['"]\s*:\s*['"](.*?)['"]/)
+                if (arrayTernaryMatch && arrayTernaryMatch[2] === loopVarName) {
+                  const arrayName = arrayTernaryMatch[1]
+                  const propertyName = arrayTernaryMatch[3]
+                  const array = this.data[arrayName]
+                  if (Array.isArray(array) && i < array.length) {
+                    const item = array[i]
+                    return item[propertyName] ? arrayTernaryMatch[4] : arrayTernaryMatch[5]
+                  }
+                }
+              }
+
+              // For other expressions, use the ExpressionEvaluator
+              return String(ExpressionEvaluator.evaluate(expr, iterationContext) || '')
+            }
+            catch (err) {
+              console.error(`Error evaluating expression in for loop: ${expr}`, err)
+              return ''
+            }
+          })
+
+          // Add the processed content to the result
+          loopContent += iterationContent
+        }
+
+        return loopContent
+      }
+      catch (error) {
+        console.error(`Error processing for loop: ${initExpr}; ${conditionExpr}; ${incrementExpr}`, error)
+        return ''
+      }
+    })
+
     // Process @foreach directive
     result = result.replace(/@foreach\s*\(\s*(.*?)\s+as\s+(.*?)\s*\)([\s\S]*?)@endforeach/g, (_, itemsExpr, itemVar, content) => {
       try {

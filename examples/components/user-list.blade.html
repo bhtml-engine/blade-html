@@ -1,0 +1,76 @@
+<div class="user-list">
+  <h3>{{ title || 'User List' }}</h3>
+  
+  @if(users)
+    <div class="user-count">Total users: {{ users.length }}</div>
+    
+    <ul class="user-items">
+      @if(users[0])
+        <li class="user-item even">
+          <div class="user-number">1</div>
+          <div class="user-name">{{ users[0].name }}</div>
+          <div class="user-email">{{ users[0].email }}</div>
+          @if(users[0].isActive)
+            <span class="status active">Active</span>
+          @else
+            <span class="status inactive">Inactive</span>
+          @endif
+        </li>
+      @endif
+      
+      @if(users[1])
+        <li class="user-item odd">
+          <div class="user-number">2</div>
+          <div class="user-name">{{ users[1].name }}</div>
+          <div class="user-email">{{ users[1].email }}</div>
+          @if(users[1].isActive)
+            <span class="status active">Active</span>
+          @else
+            <span class="status inactive">Inactive</span>
+          @endif
+        </li>
+      @endif
+      
+      @if(users[2])
+        <li class="user-item even">
+          <div class="user-number">3</div>
+          <div class="user-name">{{ users[2].name }}</div>
+          <div class="user-email">{{ users[2].email }}</div>
+          @if(users[2].isActive)
+            <span class="status active">Active</span>
+          @else
+            <span class="status inactive">Inactive</span>
+          @endif
+        </li>
+      @endif
+      
+      @if(users[3])
+        <li class="user-item odd">
+          <div class="user-number">4</div>
+          <div class="user-name">{{ users[3].name }}</div>
+          <div class="user-email">{{ users[3].email }}</div>
+          @if(users[3].isActive)
+            <span class="status active">Active</span>
+          @else
+            <span class="status inactive">Inactive</span>
+          @endif
+        </li>
+      @endif
+      
+      @if(users[4])
+        <li class="user-item even">
+          <div class="user-number">5</div>
+          <div class="user-name">{{ users[4].name }}</div>
+          <div class="user-email">{{ users[4].email }}</div>
+          @if(users[4].isActive)
+            <span class="status active">Active</span>
+          @else
+            <span class="status inactive">Inactive</span>
+          @endif
+        </li>
+      @endif
+    </ul>
+  @else
+    <p class="no-users">No users found</p>
+  @endif
+</div>

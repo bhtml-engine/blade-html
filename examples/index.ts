@@ -185,3 +185,75 @@ console.warn(`⬇️ Inline Template Output: \n\n${inlineRenderedHtml}\n`)
 writeFileSync('dist/inline-template-output.html', inlineRenderedHtml)
 
 // #endregion
+
+// #region For Loop Directive Example
+
+// Example of @for loop directive with inline template
+console.warn('\n🔄 Rendering @for loop example with inline template...')
+
+const forLoopExample = blade.render(`
+<div class="for-loop-example">
+  <h2>For Loop Directive Example</h2>
+  
+  <div class="user-list">
+    <h3>{{ title || 'User List' }}</h3>
+    
+    @if(users)
+      <div class="user-count">Total users: {{ users.length }}</div>
+      
+      <ul class="user-items">
+        @for(let i = 0; i < users.length; i = i + 1)
+          <li class="user-item">
+            <div class="user-number">{{ i + 1 }}</div>
+            <div class="user-name">{{ users[i].name }}</div>
+            <div class="user-email">{{ users[i].email }}</div>
+            <span class="status">
+              Status
+            </span>
+          </li>
+        @endfor
+      </ul>
+    @else
+      <p class="no-users">No users found</p>
+    @endif
+  </div>
+  
+  <div class="manual-loop-example">
+    <h3>Manual Iteration Example</h3>
+    <table class="user-table">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Name</th>
+          <th>Email</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for(let i = 0; i < users.length; i = i + 1)
+          <tr class="{{ i % 2 === 0 ? 'true' : 'false' }}">
+            <td>{{ i + 1 }}</td>
+            <td>{{ users[i].name }}</td>
+            <td>{{ users[i].email }}</td>
+            <td>{{ users[i].isActive }}</td>
+          </tr>
+        @endfor
+      </tbody>
+    </table>
+  </div>
+</div>`, {
+  title: 'User Directory',
+  users: [
+    { name: 'John Doe', email: 'john@example.com', isActive: true },
+    { name: 'Jane Smith', email: 'jane@example.com', isActive: true },
+    { name: 'Bob Johnson', email: 'bob@example.com', isActive: false },
+    { name: 'Alice Williams', email: 'alice@example.com', isActive: true },
+    { name: 'Charlie Brown', email: 'charlie@example.com', isActive: false },
+  ],
+})
+
+// Output the rendered for loop HTML
+console.warn(`⬇️ For Loop Example Output: \n\n${forLoopExample}\n`)
+
+// Write to a file
+writeFileSync('dist/for-loop-example.html', forLoopExample)
