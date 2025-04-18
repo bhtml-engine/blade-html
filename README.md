@@ -596,11 +596,11 @@ const html = blade.render('greeting', { mood: 'smile' })
 
 This project was developed by [relliv](https://github.com/relliv) with the help of [Windsurf](https://windsurf.com/editor) and [Claude 3.7 Sonnet](https://www.anthropic.com/news/claude-3-7-sonnet). While the codebase is functional and secure, it's still evolving and may have areas for improvement.
 
-Contributions, bug reports, and feature requests are welcome on the [GitHub repository](https://github.com/relliv/blade-html).
+Contributions, bug reports, and feature requests are welcome on the [GitHub repository](https://github.com/bhtml-engine/blade-html).
 
 ## License
 
-[MIT](./LICENSE) License © [Eyup Erdogan](https://github.com/relliv)
+[MIT](./LICENSE) License © [relliv](https://github.com/relliv)
 
 <!-- Badges -->
 
@@ -610,7 +610,7 @@ Contributions, bug reports, and feature requests are welcome on the [GitHub repo
 [npm-downloads-href]: https://npmjs.com/package/blade-html
 [bundle-src]: https://img.shields.io/bundlephobia/minzip/blade-html?style=flat&colorA=080f12&colorB=1fa669&label=minzip
 [bundle-href]: https://bundlephobia.com/result?p=blade-html
-[license-src]: https://img.shields.io/github/license/relliv/blade-html.svg?style=flat&colorA=080f12&colorB=1fa669
-[license-href]: https://github.com/relliv/blade-html/blob/main/LICENSE
+[license-src]: https://img.shields.io/github/license/bhtml-engine/blade-html.svg?style=flat&colorA=080f12&colorB=1fa669
+[license-href]: https://github.com/bhtml-engine/blade-html/blob/main/LICENSE
 [jsdocs-src]: https://img.shields.io/badge/jsdocs-reference-080f12?style=flat&colorA=080f12&colorB=1fa669
 [jsdocs-href]: https://www.jsdocs.io/package/blade-html

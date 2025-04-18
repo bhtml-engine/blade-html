@@ -4,14 +4,14 @@
   "version": "0.0.1",
   "packageManager": "pnpm@10.6.2",
   "description": "A Blade-like template engine for TypeScript",
-  "author": "Eyup Erdogan",
+  "author": "relliv",
   "license": "MIT",
-  "homepage": "https://github.com/relliv/blade-html#readme",
+  "homepage": "https://github.com/bhtml-engine/blade-html#readme",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/relliv/blade-html.git"
+    "url": "git+https://github.com/bhtml-engine/blade-html.git"
   },
-  "bugs": "https://github.com/relliv/blade-html/issues",
+  "bugs": "https://github.com/bhtml-engine/blade-html/issues",
   "keywords": [],
   "sideEffects": false,
   "exports": {
