@@ -1,14 +1,30 @@
 import { existsSync, mkdirSync, writeFileSync } from 'node:fs'
+import { dirname, join } from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { BladeHtml } from '../src/index'
 import { ExpressionEvaluator } from '../src/utils/ExpressionEvaluator'
+
+// Get the current directory (equivalent to __dirname in CommonJS)
+const currentDir = dirname(fileURLToPath(import.meta.url))
+
+// Define paths for templates and output
+const outputDir = join(currentDir, '..', 'dist')
 
 /**
  * Example demonstrating the use of Blade HTML with safer expression evaluation using filtrex
  * This example uses the enhanced BladeHtml class that automatically loads templates and registers components
  */
 
-// Create a new BladeHtml instance
-const blade = new BladeHtml()
+// Create output directory if it doesn't exist
+if (!existsSync(outputDir)) {
+  mkdirSync(outputDir, { recursive: true })
+}
+
+// Create a new BladeHtml instance with root directory
+const blade = new BladeHtml(currentDir)
+
+// Log the initialization
+console.warn('🔍 Initialized BladeHtml with root directory:', currentDir)
 
 // Define data for rendering
 const data = {
@@ -256,6 +272,32 @@ const forLoopExample = blade.render(`
 console.warn(`⬇️ For Loop Example Output: \n\n${forLoopExample}\n`)
 
 // Write to a file
-writeFileSync('dist/for-loop-example.html', forLoopExample)
+writeFileSync(join(outputDir, 'for-loop-example.html'), forLoopExample)
+
+// #endregion
+
+// #region Custom Root Directory Example
+
+// Example of using a custom root directory
+console.warn('\n📚 Example of using a custom root directory')
+
+// Create a BladeHtml instance with a custom root directory
+const customRootDir = join(currentDir, '..')
+const customBlade = new BladeHtml(customRootDir)
+
+// Render an inline template with the custom instance
+const customExample = customBlade.render(`
+<div class="custom-root-example">
+  <h2>Custom Root Directory Example</h2>
+  <p>This template is rendered using a BladeHtml instance with a custom root directory:</p>
+  <code>${customRootDir}</code>
+</div>
+`)
+
+// Output the rendered HTML
+console.warn(`⬇️ Custom Root Directory Example Output: \n\n${customExample}\n`)
+
+// Write to a file
+writeFileSync(join(outputDir, 'custom-root-example.html'), customExample)
 
 // #endregion

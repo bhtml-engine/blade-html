@@ -22,8 +22,9 @@ export class BladeHtml {
 
   /**
    * Constructor for BladeHtml
+   * @param rootDir Optional root directory for templates and components
    */
-  constructor() {
+  constructor(rootDir?: string) {
     this.engine = new Engine()
     this.compiler = new TemplateCompiler()
     this.componentRegistry = new ComponentRegistry()
@@ -31,6 +32,38 @@ export class BladeHtml {
 
     // Register common directives
     this.registerCommonDirectives()
+
+    // If rootDir is provided, set it as the base directory for templates and components
+    if (rootDir) {
+      if (existsSync(rootDir)) {
+        // Check for templates and components subdirectories
+        const templatesDir = join(rootDir, 'templates')
+        const componentsDir = join(rootDir, 'components')
+
+        const templateDirs: string[] = []
+        const componentDirs: string[] = []
+
+        // Add the root directory itself
+        templateDirs.push(rootDir)
+
+        // Check if templates directory exists
+        if (existsSync(templatesDir) && statSync(templatesDir).isDirectory()) {
+          templateDirs.push(templatesDir)
+        }
+
+        // Check if components directory exists
+        if (existsSync(componentsDir) && statSync(componentsDir).isDirectory()) {
+          componentDirs.push(componentsDir)
+        }
+
+        // Set the template and component directories
+        this.setTemplateDirs(templateDirs)
+        this.setComponentDirs(componentDirs)
+      }
+      else {
+        console.warn(`Root directory '${rootDir}' does not exist. Using default settings.`)
+      }
+    }
   }
 
   /**
