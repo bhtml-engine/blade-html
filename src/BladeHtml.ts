@@ -571,6 +571,7 @@ export class BladeHtml {
     this.registerDirective('class', CommonDirectives.class)
     this.registerDirective('style', CommonDirectives.style)
     this.registerDirective('dump', CommonDirectives.dump)
+    this.registerDirective('concat', CommonDirectives.concat)
   }
 
   /**

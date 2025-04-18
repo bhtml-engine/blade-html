@@ -146,14 +146,60 @@ export class CommonDirectives {
       // Evaluate the expression using the safer ExpressionEvaluator
       const value = ExpressionEvaluator.evaluate(args, data)
 
-      // Create a debug representation
-      const output = JSON.stringify(value, null, 2)
+      // Format the output
+      const output = typeof value === 'object'
+        ? JSON.stringify(value, null, 2)
+        : String(value)
 
-      return `<pre style="background: #f4f4f4; padding: 10px; border-radius: 5px; color: #333;">${output}</pre>`
+      return `<pre>${output}</pre>`
     }
     catch (error) {
       console.error(`Error in @dump directive: ${args}`, error)
       return '<pre>Error</pre>'
+    }
+  }
+
+  /**
+   * @concat directive - Concatenates strings
+   */
+  public static concat: DirectiveHandler = (args, data) => {
+    try {
+      // Handle string literals and expressions
+      // Remove outer quotes if the entire argument is quoted
+      if ((args.startsWith('\'') && args.endsWith('\''))
+        || (args.startsWith('"') && args.endsWith('"'))) {
+        return args.slice(1, -1)
+      }
+
+      // For expressions like 'Hello ' + name or 'Hello ' + 'World'
+      if (args.includes('+')) {
+        const parts = args.split('+')
+        let result = ''
+
+        for (const part of parts) {
+          const trimmedPart = part.trim()
+          // If it's a string literal (quoted)
+          if ((trimmedPart.startsWith('\'') && trimmedPart.endsWith('\''))
+            || (trimmedPart.startsWith('"') && trimmedPart.endsWith('"'))) {
+            result += trimmedPart.slice(1, -1)
+          }
+          else {
+            // It's a variable or expression
+            const value = ExpressionEvaluator.evaluate(trimmedPart, data)
+            result += String(value ?? '')
+          }
+        }
+
+        return result
+      }
+
+      // For a single expression
+      const value = ExpressionEvaluator.evaluate(args, data)
+      return String(value ?? '')
+    }
+    catch (error) {
+      console.error(`Error in @concat directive: ${args}`, error)
+      return ''
     }
   }
 }
