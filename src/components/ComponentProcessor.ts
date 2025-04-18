@@ -18,24 +18,27 @@ export class ComponentProcessor {
     componentRegistry: { create: (name: string, props: Record<string, any>) => Component | undefined },
     data: Record<string, any>,
   ): string {
-    return content.replace(/@component\s*\(\s*['"]([^'"]+)['"]\s*(?:,\s*(\{.*?\})\s*)?\)([\s\S]*?)@endcomponent/g, (_, componentName, propsExpr, slotContent) => {
+    return content.replace(/@component\s*\(\s*['"](\S+)['"]\s*(?:,\s*(\{.*?\})\s*)?\)([\s\S]*?)@endcomponent/g, (_, componentName, propsExpr, slotContent) => {
       try {
-        // Get the component from the registry
-        const component = componentRegistry.create(componentName, {})
+        // Parse props if provided
+        let props = {}
+        if (propsExpr) {
+          try {
+            // Evaluate props expression using the safer ExpressionEvaluator
+            props = ExpressionEvaluator.evaluateObject(propsExpr, data)
+            console.warn(`Props for component ${componentName}:`, props)
+          }
+          catch (propsError) {
+            console.error(`Error evaluating props for component ${componentName}:`, propsError, propsExpr)
+          }
+        }
+
+        // Get the component from the registry with initial props
+        const component = componentRegistry.create(componentName, props)
 
         if (!component) {
           return `<!-- Component "${componentName}" not found -->`
         }
-
-        // Parse props if provided
-        let props = {}
-        if (propsExpr) {
-          // Evaluate props expression using the safer ExpressionEvaluator
-          props = ExpressionEvaluator.evaluateObject(propsExpr, data)
-        }
-
-        // Set component props
-        Object.assign(component.props, props)
 
         // Set default slot content
         component.setSlot('default', slotContent.trim())

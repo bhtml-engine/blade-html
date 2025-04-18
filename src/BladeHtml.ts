@@ -345,7 +345,31 @@ export class BladeHtml {
           // Create a component class from the template content
           const ComponentClass = class TemplateComponent extends Component {
             render(): string {
-              return templateContent
+              // Process the template with the component's props and slots
+              let content = this.processExpressions(templateContent)
+
+              // Replace slot placeholders with actual slot content
+              for (const [slotName, slotContent] of this.slots.entries()) {
+                if (slotName === 'default') {
+                  // If there's no explicit {{ slot }} placeholder, append the content to the template
+                  if (content.includes('{{ slot }}') || content.includes('{{slot}}')) {
+                    content = content.replace(/\{\{\s*slot\s*\}\}/g, slotContent)
+                  }
+                  else {
+                    // If no slot placeholder, just append the content at the end
+                    content += slotContent
+                  }
+                }
+                else {
+                  // Replace named slots
+                  content = content.replace(
+                    new RegExp(`\\{\\{\\s*slot\\(['"\\s]*${slotName}['"\\s]*\\)\\s*\\}\\}`, 'g'),
+                    slotContent,
+                  )
+                }
+              }
+
+              return content
             }
           }
 

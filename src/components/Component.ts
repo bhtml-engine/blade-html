@@ -45,17 +45,124 @@ export abstract class Component {
    * @param template Template string with expressions
    */
   protected processExpressions(template: string): string {
-    return template.replace(/\{\{\s*(.*?)\s*\}\}/g, (_, expr) => {
-      try {
-        // Evaluate expression using the safer ExpressionEvaluator
-        const result = ExpressionEvaluator.evaluate(expr, this.props)
+    // First process conditional directives
+    const processed = this.processConditionals(template)
 
-        // Convert the result to a string and escape HTML
+    // Then process variable interpolation
+    return processed.replace(/\{\{\s*(.*?)\s*\}\}/g, (match, expr) => {
+      try {
+        // Special case for 'content' which refers to the default slot content
+        if (expr.trim() === 'content') {
+          // Don't escape HTML in slot content to allow HTML rendering
+          return this.slot('default', '')
+        }
+
+        // Handle the common || operator for default values
+        if (expr.includes('||')) {
+          const [mainExpr, defaultExpr] = expr.split('||').map((e: string) => e.trim())
+          try {
+            // Special case for 'content' in the main expression
+            if (mainExpr === 'content') {
+              const slotContent = this.slot('default', '')
+              if (slotContent) {
+                // Don't escape HTML in slot content to allow HTML rendering
+                return slotContent
+              }
+            }
+
+            // Try the main expression first
+            const mainResult = ExpressionEvaluator.evaluate(mainExpr, this.props)
+            if (mainResult !== null && mainResult !== undefined) {
+              return this.escapeHtml(String(mainResult))
+            }
+            // If main expression is null/undefined, use the default
+            const defaultResult = defaultExpr.startsWith('\'') && defaultExpr.endsWith('\'')
+              ? defaultExpr.slice(1, -1) // It's a string literal
+              : ExpressionEvaluator.evaluate(defaultExpr, this.props)
+            return this.escapeHtml(String(defaultResult ?? ''))
+          }
+          catch (e: any) {
+            // If evaluation fails, return the default value if it's a string literal
+            if (defaultExpr.startsWith('\'') && defaultExpr.endsWith('\'')) {
+              return this.escapeHtml(defaultExpr.slice(1, -1))
+            }
+            throw e
+          }
+        }
+
+        // Direct property access (common in templates)
+        if (!expr.includes('(') && !expr.includes('+') && !expr.includes('-') && !expr.includes('*') && !expr.includes('/')) {
+          // Simple property access, check if it exists directly
+          const parts = expr.split('.')
+
+          // Special handling for user.stats.X paths
+          if (parts[0] === 'user' && parts.length > 1) {
+            const nestedValue = ExpressionEvaluator.getNestedProperty(this.props, expr)
+            if (nestedValue !== undefined) {
+              return this.escapeHtml(String(nestedValue))
+            }
+          }
+
+          let value: any = this.props
+          for (const part of parts) {
+            if (value === undefined || value === null) {
+              return ''
+            }
+            value = value[part]
+          }
+          if (value !== undefined && value !== null) {
+            return this.escapeHtml(String(value))
+          }
+        }
+
+        // For more complex expressions, use Filtrex
+        const result = ExpressionEvaluator.evaluate(expr, this.props)
         return this.escapeHtml(String(result ?? ''))
       }
       catch (error) {
+        // Don't show errors in the output, just return empty string
         console.error(`Error evaluating expression: ${expr}`, error)
         return ''
+      }
+    })
+  }
+
+  /**
+   * Process conditional directives in a template
+   * @param template Template string with conditional directives
+   */
+  protected processConditionals(template: string): string {
+    // Process @if directives
+    return template.replace(/@if\s*\(([^)]+)\)([\s\S]*?)(?:@else([\s\S]*?))?@endif/g, (_, condition, ifContent, elseContent) => {
+      try {
+        // Try to evaluate the condition directly first
+        let result = false
+
+        // Handle direct property access
+        if (!condition.includes('(') && !condition.includes('+') && !condition.includes('-') && !condition.includes('*') && !condition.includes('/')) {
+          // Simple property access, check if it exists and is truthy
+          const parts = condition.split('.')
+          let value: any = this.props
+          for (const part of parts) {
+            if (value === undefined || value === null) {
+              result = false
+              break
+            }
+            value = value[part]
+          }
+          result = Boolean(value)
+        }
+        else {
+          // For more complex conditions, use Filtrex
+          result = ExpressionEvaluator.evaluateCondition(condition, this.props)
+        }
+
+        // Return the appropriate content based on the condition result
+        return result ? this.processExpressions(ifContent) : (elseContent ? this.processExpressions(elseContent) : '')
+      }
+      catch (error) {
+        console.error(`Error evaluating condition: ${condition}`, error)
+        return elseContent ? this.processExpressions(elseContent) : ''
       }
     })
   }

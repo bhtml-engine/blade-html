@@ -14,6 +14,14 @@ export class ExpressionEvaluator {
    */
   public static evaluate(expr: string, context: Record<string, any>): any {
     try {
+      // First check for direct property access with dot notation
+      if (!expr.includes('(') && !expr.includes('+') && !expr.includes('-')
+        && !expr.includes('*') && !expr.includes('/') && !expr.includes('==')
+        && !expr.includes('!=') && !expr.includes('<') && !expr.includes('>')) {
+        // Simple property access, try to resolve it directly
+        return this.getNestedProperty(context, expr)
+      }
+
       // Prepare the expression for filtrex by replacing common template patterns
       const preparedExpr = this.prepareExpression(expr)
 
@@ -52,6 +60,11 @@ export class ExpressionEvaluator {
       }
     })
 
+    // Convert dot notation to bracket notation for nested properties
+    prepared = prepared.replace(/([a-z_]\w*)\.(\w+)/gi, (_, obj, prop) => {
+      return `${obj}['${prop}']`
+    })
+
     return prepared
   }
 
@@ -63,8 +76,53 @@ export class ExpressionEvaluator {
    * @returns The boolean result of the condition evaluation
    */
   public static evaluateCondition(condition: string, context: Record<string, any>): boolean {
+    // Handle simple truthy checks directly
+    if (!condition.includes('(') && !condition.includes('+') && !condition.includes('-')
+      && !condition.includes('*') && !condition.includes('/') && !condition.includes('==')
+      && !condition.includes('!=') && !condition.includes('<') && !condition.includes('>')) {
+      // Simple property check, just see if it exists and is truthy
+      const value = this.getNestedProperty(context, condition)
+      return Boolean(value)
+    }
+
     const result = this.evaluate(condition, context)
     return Boolean(result)
+  }
+
+  /**
+   * Gets a nested property from an object using dot notation
+   *
+   * @param obj The object to get the property from
+   * @param path The path to the property using dot notation (e.g., 'user.stats.posts')
+   * @returns The value of the nested property or undefined if not found
+   */
+  public static getNestedProperty(obj: Record<string, any>, path: string): any {
+    if (!obj || !path) {
+      return undefined
+    }
+
+    // Handle direct property access
+    if (path in obj) {
+      return obj[path]
+    }
+
+    // Handle nested properties with dot notation
+    const parts = path.split('.')
+    let current = obj
+
+    for (const part of parts) {
+      if (current === null || current === undefined) {
+        return undefined
+      }
+
+      if (!(part in current)) {
+        return undefined
+      }
+
+      current = current[part]
+    }
+
+    return current
   }
 
   /**
