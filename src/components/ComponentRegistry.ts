@@ -58,4 +58,11 @@ export class ComponentRegistry {
 
     return component.render()
   }
+
+  /**
+   * Get all registered component names
+   */
+  public getNames(): string[] {
+    return Array.from(this.components.keys())
+  }
 }

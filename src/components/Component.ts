@@ -132,39 +132,52 @@ export abstract class Component {
    * @param template Template string with conditional directives
    */
   protected processConditionals(template: string): string {
-    // Process @if directives
-    return template.replace(/@if\s*\(([^)]+)\)([\s\S]*?)(?:@else([\s\S]*?))?@endif/g, (_, condition, ifContent, elseContent) => {
-      try {
-        // Try to evaluate the condition directly first
-        let result = false
+    // First, process nested @if directives recursively
+    let result = template
+    let lastResult = ''
 
-        // Handle direct property access
-        if (!condition.includes('(') && !condition.includes('+') && !condition.includes('-') && !condition.includes('*') && !condition.includes('/')) {
-          // Simple property access, check if it exists and is truthy
-          const parts = condition.split('.')
-          let value: any = this.props
-          for (const part of parts) {
-            if (value === undefined || value === null) {
-              result = false
-              break
+    // Keep processing until no more changes are made (handles nested conditions)
+    while (result !== lastResult) {
+      lastResult = result
+
+      // Process @if directives
+      result = lastResult.replace(/@if\s*\(([^)]+)\)([\s\S]*?)(?:@else([\s\S]*?))?@endif/g, (match, condition, ifContent, elseContent = '') => {
+        try {
+          // Try to evaluate the condition
+          let conditionResult = false
+
+          // Handle direct property access
+          if (!condition.includes('(') && !condition.includes('+') && !condition.includes('-')
+            && !condition.includes('*') && !condition.includes('/') && !condition.includes('>')
+            && !condition.includes('<') && !condition.includes('==')) {
+            // Simple property access, check if it exists and is truthy
+            const parts = condition.split('.')
+            let value: any = this.props
+            for (const part of parts) {
+              if (value === undefined || value === null) {
+                conditionResult = false
+                break
+              }
+              value = value[part]
             }
-            value = value[part]
+            conditionResult = Boolean(value)
           }
-          result = Boolean(value)
-        }
-        else {
-          // For more complex conditions, use Filtrex
-          result = ExpressionEvaluator.evaluateCondition(condition, this.props)
-        }
+          else {
+            // For more complex conditions, use the expression evaluator
+            conditionResult = ExpressionEvaluator.evaluateCondition(condition, this.props)
+          }
 
-        // Return the appropriate content based on the condition result
-        return result ? this.processExpressions(ifContent) : (elseContent ? this.processExpressions(elseContent) : '')
-      }
-      catch (error) {
-        console.error(`Error evaluating condition: ${condition}`, error)
-        return elseContent ? this.processExpressions(elseContent) : ''
-      }
-    })
+          // Return the appropriate content based on the condition result
+          return conditionResult ? ifContent : elseContent
+        }
+        catch (error) {
+          console.error(`Error evaluating condition: ${condition}`, error)
+          return elseContent
+        }
+      })
+    }
+
+    return result
   }
 
   /**
