@@ -5,17 +5,18 @@
     <span class="badge badge-success">Verified</span>
     @endif
   </div>
+  
   <div class="user-body">
     <p><strong>Email:</strong> {{ user.email }}</p>
     <p><strong>Role:</strong> {{ user.role }}</p>
-    
+
     @if(user.bio)
     <div class="bio">
       <h4>Bio</h4>
       <p>{{ user.bio }}</p>
     </div>
     @endif
-    
+
     @if(user.stats)
     <div class="stats">
       <h4>Stats</h4>
