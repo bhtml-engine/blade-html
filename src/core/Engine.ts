@@ -78,8 +78,9 @@ export class Engine {
     // Process @yield directives to fill in sections
     content = this.processYields(content)
 
-    // Second pass: Process all directives and expressions
+    // Second pass: Process all custom directives before expressions
     content = this.processDirectives(content)
+    // Now process variable expressions (e.g., {{ ... }})
     content = this.processExpressions(content)
 
     return content
@@ -392,12 +393,24 @@ export class Engine {
       return tempEngine.render('__include')
     })
 
-    // Process custom directives
+    // Process custom directives: support both @name(args) and @name args
     for (const [name, handler] of this.directives.entries()) {
-      const directiveRegex = new RegExp(`@${name}\\s*\\(\\s*(.*?)\\s*\\)`, 'g')
-      result = result.replace(directiveRegex, (_, args) => {
+      // First, process the @name(args) form (not part of a larger word)
+      const parenRegex = new RegExp(`(?<![\w@])@${name}\\s*\\(\\s*([^)]*?)\\s*\\)`, 'g')
+      result = result.replace(parenRegex, (_, args) => {
         try {
           return handler(args, this.data)
+        }
+        catch (error) {
+          console.error(`Error processing directive @${name}`, error)
+          return ''
+        }
+      })
+      // Then, process the @name arg form (not followed by a parenthesis, not inside a word or tag)
+      const wordRegex = new RegExp(`(?<![\w@])@${name}\\s+([^\s@][^\n@]*)`, 'g')
+      result = result.replace(wordRegex, (_, args) => {
+        try {
+          return handler(args.trim(), this.data)
         }
         catch (error) {
           console.error(`Error processing directive @${name}`, error)

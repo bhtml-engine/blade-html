@@ -621,14 +621,21 @@ export class BladeHtml {
    * Register common directives
    */
   private registerCommonDirectives(): void {
-    this.directiveRegistry.register('json', CommonDirectives.json)
-    this.directiveRegistry.register('raw', CommonDirectives.raw)
-    this.directiveRegistry.register('date', CommonDirectives.date)
-    this.directiveRegistry.register('class', CommonDirectives.class)
-    this.directiveRegistry.register('style', CommonDirectives.style)
-    this.directiveRegistry.register('dump', CommonDirectives.dump)
-    this.directiveRegistry.register('concat', CommonDirectives.concat)
-    this.directiveRegistry.register('formatDate', CommonDirectives.formatDate)
+    // Register with both directiveRegistry and engine for compatibility
+    const builtins = [
+      ['json', CommonDirectives.json],
+      ['raw', CommonDirectives.raw],
+      ['date', CommonDirectives.date],
+      ['class', CommonDirectives.class],
+      ['style', CommonDirectives.style],
+      ['dump', CommonDirectives.dump],
+      ['concat', CommonDirectives.concat],
+      ['formatDate', CommonDirectives.formatDate],
+    ] as const
+    for (const [name, handler] of builtins) {
+      this.directiveRegistry.register(name, handler)
+      this.engine.registerDirective(name, handler)
+    }
   }
 
   /**
