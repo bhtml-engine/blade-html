@@ -1,6 +1,7 @@
 {
   "recommendations": [
     "dbaeumer.vscode-eslint",
-    "antfu.pnpm-catalog-lens"
+    "antfu.pnpm-catalog-lens",
+    "george-alisson.html-preview-vscode"
   ]
 }
