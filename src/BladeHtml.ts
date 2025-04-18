@@ -20,6 +20,33 @@ export class BladeHtml {
   private templateDirs: string[] = []
   private componentDirs: string[] = []
   private rootDir!: string
+  private aliases: Map<string, string> = new Map() // alias => directory
+
+  /**
+   * Register an alias (namespace) for a root directory
+   * @param alias Alias name (e.g., 'theme1')
+   * @param dir Absolute path to the root directory
+   */
+  public registerAlias(alias: string, dir: string): this {
+    this.aliases.set(alias, dir)
+    return this
+  }
+
+  /**
+   * Resolve a template/component name with alias (e.g., theme1::pages.home)
+   * Returns { dir, name } if alias found, else null
+   */
+  private resolveAlias(name: string): { dir: string, name: string } | null {
+    const match = name.match(/^([\w-]+)::(.+)$/)
+    if (!match)
+      return null
+    const alias = match[1]
+    const rest = match[2]
+    const dir = this.aliases.get(alias)
+    if (!dir)
+      return null
+    return { dir, name: rest }
+  }
 
   /**
    * Constructor for BladeHtml
@@ -88,7 +115,17 @@ export class BladeHtml {
    * @param content Template content
    */
   public registerTemplate(name: string, content: string): this {
-    this.engine.registerTemplate(name, content)
+    // Support registering with alias (theme1::pages.home)
+    const aliasInfo = this.resolveAlias(name)
+    if (aliasInfo) {
+      // Optionally: store in a per-alias engine or map for true isolation
+      // For now, just flatten: alias::name => alias.name
+      const flatName = `${aliasInfo.dir}::${aliasInfo.name}`
+      this.engine.registerTemplate(flatName, content)
+    }
+    else {
+      this.engine.registerTemplate(name, content)
+    }
     return this
   }
 
@@ -118,6 +155,56 @@ export class BladeHtml {
    * @param name Component name (can be namespaced with dots)
    */
   public loadComponent(name: string): boolean {
+    // Alias support: theme1::components.alert
+    const aliasInfo = this.resolveAlias(name)
+    if (aliasInfo) {
+      const aliasComponentDirs = [
+        join(aliasInfo.dir, 'components'),
+        join(aliasInfo.dir, 'pages'),
+        join(aliasInfo.dir, 'layouts'),
+        aliasInfo.dir,
+      ]
+      for (const dir of aliasComponentDirs) {
+        const parts = aliasInfo.name.split('.')
+        const possiblePaths: string[] = []
+        if (parts.length > 1) {
+          const namespace = parts.slice(0, -1).join('/')
+          const componentName = parts[parts.length - 1]
+          possiblePaths.push(join(dir, namespace, `${componentName}.blade.html`))
+          possiblePaths.push(join(dir, `${componentName}.blade.html`))
+        }
+        else {
+          possiblePaths.push(join(dir, `${aliasInfo.name}.blade.html`))
+        }
+        for (const componentPath of possiblePaths) {
+          if (existsSync(componentPath)) {
+            const templateContent = readFileSync(componentPath, 'utf-8')
+            const ComponentClass = class DynamicComponent extends Component {
+              render(): string {
+                let content = this.processExpressions(templateContent)
+                for (const [slotName, slotContent] of this.slots.entries()) {
+                  if (slotName === 'default') {
+                    const slotOrContentMatch = content.match(/\{\{\s*(slot|content)\s*\}\}/)
+                    if (slotOrContentMatch) {
+                      content = content.replace(/\{\{\s*(slot|content)\s*\}\}/, slotContent)
+                    }
+                  }
+                  else {
+                    content = content.replace(
+                      new RegExp(`\{\{\s*slot\(['"\s]*${slotName}['"\s]*\)\s*\}\}`, 'g'),
+                      slotContent,
+                    )
+                  }
+                }
+                return content
+              }
+            }
+            this.registerComponent(name, ComponentClass)
+            return true
+          }
+        }
+      }
+    }
     // If component is already registered, no need to load it
     if (this.componentRegistry.has(name)) {
       return true
@@ -269,18 +356,7 @@ export class BladeHtml {
       return names
     }
 
-    // Function to get template content by name
-    const getTemplateContent = (name: string): string => {
-      try {
-        // Try to get the template content from the engine
-        return this.engine.getTemplateContent(name)
-      }
-      catch {
-        // Catch without binding the error variable
-        console.warn(`Could not load template: ${name}`)
-        return ''
-      }
-    }
+    // Move getTemplateContent to be a class method (already defined elsewhere, so remove from here)
 
     // Process templates in the queue
     while (templateQueue.length > 0) {
@@ -295,7 +371,7 @@ export class BladeHtml {
       console.warn(`Analyzing template dependencies: ${templateName}`)
 
       // Get template content
-      const content = getTemplateContent(templateName)
+      const content = this.getTemplateContent(templateName)
       if (!content)
         continue
 
@@ -324,6 +400,31 @@ export class BladeHtml {
     }
 
     return usedComponents
+  }
+
+  /**
+   * Get template content by name, with alias support
+   * @param name Template name
+   * @returns Template content string or '' if not found
+   */
+  public getTemplateContent(name: string): string {
+    const aliasInfo = this.resolveAlias(name)
+    if (aliasInfo) {
+      try {
+        return this.engine.getTemplateContent(`${aliasInfo.dir}::${aliasInfo.name}`)
+      }
+      catch {
+        console.warn(`Could not load template (alias): ${name}`)
+        return ''
+      }
+    }
+    try {
+      return this.engine.getTemplateContent(name)
+    }
+    catch {
+      console.warn(`Could not load template: ${name}`)
+      return ''
+    }
   }
 
   /**
@@ -512,10 +613,13 @@ export class BladeHtml {
    * @param autoLoadDependencies Whether to automatically load dependencies (default: true)
    */
   public render(nameOrContent: string, data: Record<string, any> = {}, autoLoadDependencies: boolean = true): string {
-    // Check if nameOrContent is a template name or inline content
+    // Alias support: resolve and flatten
     let isInlineTemplate = false
     let templateName = nameOrContent
-
+    const aliasInfo = this.resolveAlias(nameOrContent)
+    if (aliasInfo) {
+      templateName = `${aliasInfo.dir}::${aliasInfo.name}`
+    }
     // If it contains template directives or HTML tags, it's likely an inline template
     if (
       nameOrContent.includes('@')
@@ -524,43 +628,29 @@ export class BladeHtml {
       || !nameOrContent.match(/^[\w.]+$/)
     ) {
       isInlineTemplate = true
-      // Generate a unique name for the inline template
       templateName = `inline_template_${Date.now()}`
-      // Register the inline content as a template
       this.registerTemplate(templateName, nameOrContent)
     }
-
-    // If autoLoadDependencies is true, load templates and register components
     if (autoLoadDependencies) {
-      // Default namespaces to load templates from
       const defaultNamespaces = ['pages', 'layouts', 'components']
       this.loadTemplatesAndRegisterComponents(defaultNamespaces, templateName)
     }
-
     this.engine.setData(data)
     let content = this.engine.render(templateName)
-
-    // If it was an inline template, unregister it to avoid cluttering the template registry
     if (isInlineTemplate) {
       this.engine.unregisterTemplate(templateName)
     }
-
-    // Process component directives with dynamic component loading
     content = ComponentProcessor.process(
       content,
       {
         create: (componentName, props) => {
-          // Try to load the component if it's not already registered
           if (!this.componentRegistry.has(componentName)) {
-            // First try to load the component with the exact name
             if (!this.loadComponent(componentName)) {
-              // If not found, try with common namespaces for non-namespaced components
               if (!componentName.includes('.')) {
                 const commonNamespaces = ['components']
                 for (const namespace of commonNamespaces) {
                   const namespacedName = `${namespace}.${componentName}`
                   if (this.loadComponent(namespacedName)) {
-                    // If found with namespace, create an alias
                     const componentRegistry = this.componentRegistry
                     const ComponentClass = class DynamicComponent extends Component {
                       render(): string {
@@ -579,7 +669,6 @@ export class BladeHtml {
               }
             }
           }
-
           try {
             return this.componentRegistry.create(componentName, props)
           }
@@ -591,7 +680,6 @@ export class BladeHtml {
       },
       data,
     )
-
     return content
   }
 

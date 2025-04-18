@@ -4,8 +4,10 @@ import { fileURLToPath } from 'node:url'
 import { BladeHtml } from '../src/index'
 import { ExpressionEvaluator } from '../src/utils/ExpressionEvaluator'
 
+const themeFolder = 'theme-1'
+
 // Get the current directory (equivalent to __dirname in CommonJS)
-const currentDir = join(dirname(fileURLToPath(import.meta.url)), 'theme-1')
+const currentDir = join(dirname(fileURLToPath(import.meta.url)), themeFolder)
 
 console.warn('currentDir', currentDir)
 
@@ -25,8 +27,12 @@ if (!existsSync(outputDir)) {
 // Create a new BladeHtml instance with root directory
 const blade = new BladeHtml(currentDir)
 
+// Register an alias for this theme directory
+blade.registerAlias('theme1', currentDir)
+
 // Log the initialization
 console.warn('🔍 Initialized BladeHtml with root directory:', currentDir)
+console.warn('🔗 Registered alias: theme1 ->', currentDir)
 
 // Define data for rendering
 const data = {
@@ -149,8 +155,8 @@ blade.registerDirective('concat', (args: string, data: Record<string, any>) => {
   }
 })
 
-if (!existsSync('dist')) {
-  mkdirSync('dist')
+if (!existsSync(`dist/${themeFolder}`)) {
+  mkdirSync(`dist/${themeFolder}`)
 }
 
 // #region Template Path Rendering
@@ -166,9 +172,15 @@ const renderedHtml = blade.render(initialTemplate, data)
 console.warn('🔄 Rendering page with safer expression evaluation...\n')
 console.warn(`⬇️ Output: \n\n${renderedHtml}\n`)
 
+// --- Alias rendering example ---
+const aliasTemplateName = 'theme1::pages.home'
+const renderedAliasHtml = blade.render(aliasTemplateName, data)
+console.warn('🔄 Rendering page using alias (theme1::pages.home)...\n')
+console.warn(`⬇️ Alias Output: \n\n${renderedAliasHtml}\n`)
+
 // You could also write to a file
 
-writeFileSync('dist/template-path-output.html', renderedHtml)
+writeFileSync(`dist/${themeFolder}/template-path-output.html`, renderedHtml)
 
 // #endregion
 
@@ -211,7 +223,7 @@ const inlineRenderedHtml = blade.render(inlineTemplate, {
 // Output the rendered inline HTML
 console.warn(`⬇️ Inline Template Output: \n\n${inlineRenderedHtml}\n`)
 
-writeFileSync('dist/inline-template-output.html', inlineRenderedHtml)
+writeFileSync(`dist/${themeFolder}/inline-template-output.html`, inlineRenderedHtml)
 
 // #endregion
 
@@ -285,7 +297,7 @@ const forLoopExample = blade.render(`
 console.warn(`⬇️ For Loop Example Output: \n\n${forLoopExample}\n`)
 
 // Write to a file
-writeFileSync(join(outputDir, 'for-loop-example.html'), forLoopExample)
+writeFileSync(join(outputDir, `${themeFolder}/for-loop-example.html`), forLoopExample)
 
 // #endregion
 
@@ -311,6 +323,6 @@ const customExample = customBlade.render(`
 console.warn(`⬇️ Custom Root Directory Example Output: \n\n${customExample}\n`)
 
 // Write to a file
-writeFileSync(join(outputDir, 'custom-root-example.html'), customExample)
+writeFileSync(join(outputDir, `${themeFolder}/custom-root-example.html`), customExample)
 
 // #endregion
