@@ -46,8 +46,9 @@ export class DirectiveRegistry {
       return handler(args, data)
     }
     catch (error) {
+      const errorMsg = error instanceof Error ? error.message : String(error)
       console.error(`Error processing directive @${name}`, error)
-      return `<!-- Error in directive @${name} -->`
+      return `<!-- Error in directive @${name}: ${errorMsg} -->`
     }
   }
 

@@ -559,8 +559,15 @@ export class BladeHtml {
       // Function to recursively process directories
       const processDirectory = (dir: string, namePrefix: string = namespace): void => {
         try {
+          if (!existsSync(dir) || !statSync(dir).isDirectory()) {
+            // Directory does not exist or is not a directory, skip
+            return
+          }
           const items = readdirSync(dir)
-
+          if (!Array.isArray(items)) {
+            // Not iterable, skip
+            return
+          }
           for (const item of items) {
             const itemPath = join(dir, item)
             const stats = statSync(itemPath)

@@ -46,7 +46,7 @@ describe('directive registry', () => {
 
       const result = registry.process('error', '', {})
 
-      expect(result).toContain('<!-- Error in directive @error -->')
+      expect(result).toContain('<!-- Error in directive @error: Test error -->')
     })
 
     it('should handle non-existent directives', () => {
