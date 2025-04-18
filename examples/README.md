@@ -12,6 +12,11 @@ pnpm dlx tsx ./examples/theme-1.ts
 
 This will generate the rendered HTML in the console and also save it to `dist/output.html`.
 
+## What's New
+
+- **Improved Error Reporting**: Error messages from directives now include the actual error message in the rendered output (e.g., `<!-- Error in directive @name: Actual error message -->`).
+- **Inline Template Rendering**: You can render inline template strings directly, and the engine will handle them automatically.
+
 ## Key Features
 
 ### Template System

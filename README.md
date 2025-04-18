@@ -11,6 +11,13 @@ A flexible and secure template engine for TypeScript, inspired by [Laravel](http
 > [!NOTE]
 > BladeHtml prioritizes security and flexibility, using Filtrex for safe expression evaluation without relying on `eval()` or `new Function()`.
 
+## What's New
+
+- **Improved Error Reporting**: When a directive throws an error, the error message is included in the rendered output (e.g., `<!-- Error in directive @name: Actual error message -->`). This makes debugging and writing tests easier.
+- **Inline Template Rendering**: You can now render inline template strings directly with `blade.render()`. Inline templates are detected automatically and registered with a unique name for each render.
+- **Warnings for Missing Directories**: If a template/component directory does not exist, a warning is shown (e.g., `Root directory '/path/to/src' does not exist. Using default settings.`). This does not cause test failures, but means no templates/components are loaded from that directory.
+- **Test Suite**: All tests now expect error messages from directives to include the actual error text for more accurate assertions.
+
 ## Key Features
 
 ### Template System
