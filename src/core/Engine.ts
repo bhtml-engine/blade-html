@@ -38,15 +38,25 @@ export class Engine {
   }
 
   /**
+   * Get template content by name
+   * @param name Template name
+   * @returns Template content
+   */
+  public getTemplateContent(name: string): string {
+    const template = this.templates.get(name)
+    if (!template) {
+      throw new Error(`Template "${name}" not found`)
+    }
+    return template
+  }
+
+  /**
    * Render a template by name
    * @param name Template name
    * @returns Rendered HTML
    */
   public render(name: string): string {
-    const template = this.templates.get(name)
-    if (!template) {
-      throw new Error(`Template "${name}" not found`)
-    }
+    const template = this.getTemplateContent(name)
 
     // Clear sections for each new render
     this.sections.clear()
