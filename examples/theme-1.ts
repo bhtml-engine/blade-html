@@ -74,19 +74,30 @@ const data = {
 // Register a custom directive for formatting dates
 blade.registerDirective('formatDate', (args: string, data: Record<string, any>) => {
   try {
-    // For date formatting, we need to handle this specially since filtrex doesn't support methods
-    if (args.includes('new Date()')) {
-      return new Date().toLocaleDateString()
+    // Parse arguments: value, format
+    const argsMatch = args.match(/^(.*?)(?:,\s*['"]([^'"]+)['"])?$/)
+    if (!argsMatch)
+      return ''
+    const valueExpr = argsMatch[1]
+    const format = argsMatch[2] || 'YYYY-MM-DD'
+
+    let value = ExpressionEvaluator.evaluate(valueExpr, data)
+    // Normalize date string if in YYYY-MM-DD format
+    if (typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value)) {
+      value = value.replace(/-/g, '/')
     }
-    // If the argument is a string literal (wrapped in quotes), extract it
-    if ((args.startsWith('\'') && args.endsWith('\'')) || (args.startsWith('"') && args.endsWith('"'))) {
-      const dateStr = args.substring(1, args.length - 1)
-      return new Date(dateStr).toLocaleDateString()
-    }
-    // Otherwise try to evaluate as a timestamp or date string
-    const value = ExpressionEvaluator.evaluate(args, data)
     const date = new Date(value)
-    return date.toLocaleDateString()
+    if (Number.isNaN(date.getTime()))
+      return 'Invalid Date'
+
+    if (format === 'YYYY-MM-DD') {
+      return date.toISOString().slice(0, 10)
+    }
+    if (format === 'locale') {
+      return date.toLocaleDateString()
+    }
+    // Add more format cases as needed
+    return date.toString()
   }
   catch (error) {
     console.error('Error formatting date:', error)

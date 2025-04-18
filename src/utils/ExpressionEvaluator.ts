@@ -14,6 +14,13 @@ export class ExpressionEvaluator {
    */
   public static evaluate(expr: string, context: Record<string, any>): any {
     try {
+      // Handle string literals directly (single or double quotes)
+      if (
+        (expr.startsWith('\'') && expr.endsWith('\''))
+        || (expr.startsWith('"') && expr.endsWith('"'))
+      ) {
+        return expr.slice(1, -1)
+      }
       // First check for direct property access with dot notation
       if (!expr.includes('(') && !expr.includes('+') && !expr.includes('-')
         && !expr.includes('*') && !expr.includes('/') && !expr.includes('==')

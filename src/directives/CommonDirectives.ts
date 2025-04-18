@@ -75,6 +75,46 @@ export class CommonDirectives {
   }
 
   /**
+   * @formatDate directive - Formats a date with an optional format string
+   * Usage: @formatDate(date, 'YYYY-MM-DD') or @formatDate(date, 'locale')
+   */
+  public static formatDate: DirectiveHandler = (args, data) => {
+    try {
+      // Parse arguments: @formatDate(value, format)
+      const argsMatch = args.match(/^(.*?)(?:,\s*['"]([^'"]+)['"])?$/)
+      if (!argsMatch)
+        return ''
+      const valueExpr = argsMatch[1]
+      const format = argsMatch[2] || null
+      // Evaluate the date expression
+      let value = ExpressionEvaluator.evaluate(valueExpr, data)
+      // Remove surrounding quotes if present
+      if (typeof value === 'string') {
+        value = value.replace(/^['"]|['"]$/g, '')
+        if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+          value = value.replace(/-/g, '/')
+        }
+      }
+      const date = new Date(value)
+      if (Number.isNaN(date.getTime()))
+        return 'Invalid Date'
+      // Basic formatting
+      if (format === 'YYYY-MM-DD') {
+        return date.toISOString().slice(0, 10)
+      }
+      if (format === 'locale') {
+        return date.toLocaleString()
+      }
+      // Add more format cases as needed
+      return date.toString()
+    }
+    catch (error) {
+      console.error(`Error in @formatDate directive: ${args}`, error)
+      return ''
+    }
+  }
+
+  /**
    * @class directive - Conditionally adds CSS classes
    */
   public static class: DirectiveHandler = (args, data) => {
